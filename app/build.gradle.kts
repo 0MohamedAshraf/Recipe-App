@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.room.ktx)
     implementation(libs.glide)
     implementation(libs.activity.ktx)
+    implementation(libs.lottie.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

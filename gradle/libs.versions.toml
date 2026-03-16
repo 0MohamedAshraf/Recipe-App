@@ -13,6 +13,7 @@ gsonVersion = "2.13.2"
 roomVersion = "2.8.4"
 kspVersion = "2.0.21-1.0.25"
 glideVersion = "5.0.5"
+lottieVersion = "6.7.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -37,6 +38,7 @@ room-compiler = { group = "androidx.room",name = "room-compiler", version.ref = 
 room-ktx = { group = "androidx.room",name = "room-ktx", version.ref = "roomVersion"}
 glide = { group = "com.github.bumptech.glide",name = "glide", version.ref = "glideVersion"}
 activity-ktx = { group = "androidx.activity",name = "activity-ktx", version.ref = "activityCompose"}
+lottie-compose = { group = "com.airbnb.android",name = "lottie-compose", version.ref = "lottieVersion"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
