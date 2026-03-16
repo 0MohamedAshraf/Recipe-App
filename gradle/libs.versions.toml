@@ -11,7 +11,7 @@ composeBom = "2024.09.00"
 retrofitVersion = "3.0.0"
 gsonVersion = "2.13.2"
 roomVersion = "2.8.4"
-kspVersion = "2.0.21-1.0.25"
+kspVersion = "2.3.4"
 glideVersion = "5.0.5"
 lottieVersion = "6.7.1"
 
