@@ -1,5 +1,5 @@
 package com.example.recipe_app.dataSource.network.dto
 
-data class RandomMealResponse(
+data class MealResponse(
     val meals: List<Meal>?
 )
