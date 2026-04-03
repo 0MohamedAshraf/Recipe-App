@@ -54,6 +54,8 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.androidx.compose.animation.core.lint)
+    implementation ("androidx.compose.material:material-icons-extended")
     ksp(libs.room.compiler)
     implementation(libs.glide)
     implementation(libs.activity.ktx)

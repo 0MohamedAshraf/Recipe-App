@@ -19,6 +19,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.recipe_app.Sign_In_Screen.SignInScreen
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -26,42 +27,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Recipe_AppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            SignInScreen()
 
-                    SplashScreenAnimation(
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
             }
         }
-    }
 }
 
-@Composable
-fun SplashScreenAnimation(modifier: Modifier = Modifier) {
-    val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.food_prep)
-    )
-
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        LottieAnimation(
-            composition = composition,
-            progress = { progress }
-        )
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun GreetingPreview() {
-    Recipe_AppTheme {
-    }
-}

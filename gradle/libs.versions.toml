@@ -14,6 +14,7 @@ roomVersion = "2.8.4"
 kspVersion = "2.3.4"
 glideVersion = "5.0.5"
 lottieVersion = "6.7.1"
+animationCoreLint = "1.10.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,6 +40,7 @@ room-ktx = { group = "androidx.room",name = "room-ktx", version.ref = "roomVersi
 glide = { group = "com.github.bumptech.glide",name = "glide", version.ref = "glideVersion"}
 activity-ktx = { group = "androidx.activity",name = "activity-ktx", version.ref = "activityCompose"}
 lottie-compose = { group = "com.airbnb.android",name = "lottie-compose", version.ref = "lottieVersion"}
+androidx-compose-animation-core-lint = { group = "androidx.compose.animation", name = "animation-core-lint", version.ref = "animationCoreLint" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
