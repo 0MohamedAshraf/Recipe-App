@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.glide)
+    implementation(libs.glide.compose)
     implementation(libs.activity.ktx)
     implementation(libs.lottie.compose)
     testImplementation(libs.junit)
