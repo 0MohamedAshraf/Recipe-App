@@ -14,6 +14,8 @@ roomVersion = "2.8.4"
 kspVersion = "2.3.4"
 glideVersion = "5.0.5"
 lottieVersion = "6.7.1"
+nav_Version = "2.9.7"
+coil_Version = "3.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,6 +41,9 @@ room-ktx = { group = "androidx.room",name = "room-ktx", version.ref = "roomVersi
 glide = { group = "com.github.bumptech.glide",name = "glide", version.ref = "glideVersion"}
 activity-ktx = { group = "androidx.activity",name = "activity-ktx", version.ref = "activityCompose"}
 lottie-compose = { group = "com.airbnb.android",name = "lottie-compose", version.ref = "lottieVersion"}
+navigation-compose = { group = "androidx.navigation",name = "navigation-compose", version.ref = "nav_Version"}
+coil-compose = { group = "io.coil-kt.coil3",name = "coil-compose", version.ref = "coil_Version"}
+coil-network-okhttp = { group = "io.coil-kt.coil3",name = "coil-network-okhttp", version.ref = "coil_Version"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
