@@ -1,8 +1,8 @@
-package com.example.recipe_app
+package com.example.recipe_app.screens.homeScreen.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.recipe_app.repo.MealRepository
+import com.example.recipe_app.screens.homeScreen.repo.MealRepository
 
 class MealViewModelFactory(
     private val repository: MealRepository

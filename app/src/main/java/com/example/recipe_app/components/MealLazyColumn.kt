@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.recipe_app.dataSource.network.dto.Meal
+import com.example.recipe_app.screens.homeScreen.dto.Meal
 
 @Composable
 fun MealLazyColumn(meals: List<Meal>, modifier: Modifier = Modifier){

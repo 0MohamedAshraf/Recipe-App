@@ -1,11 +1,11 @@
-package com.example.recipe_app
+package com.example.recipe_app.screens.homeScreen.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.recipe_app.dataSource.network.dto.Category
-import com.example.recipe_app.dataSource.network.dto.Meal
-import com.example.recipe_app.repo.MealRepository
+import com.example.recipe_app.screens.homeScreen.dto.Category
+import com.example.recipe_app.screens.homeScreen.dto.Meal
+import com.example.recipe_app.screens.homeScreen.repo.MealRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

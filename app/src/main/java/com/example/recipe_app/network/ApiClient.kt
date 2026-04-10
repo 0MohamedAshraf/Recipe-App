@@ -1,4 +1,4 @@
-package com.example.recipe_app.dataSource.network
+package com.example.recipe_app.network
 
 import com.google.gson.GsonBuilder
 import retrofit2.Retrofit

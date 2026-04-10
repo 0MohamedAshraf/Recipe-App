@@ -11,8 +11,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.recipe_app.MealViewModel
-import com.example.recipe_app.dataSource.network.dto.Category
+import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
+import com.example.recipe_app.screens.homeScreen.dto.Category
 
 @Composable
 fun CategoriesRow(

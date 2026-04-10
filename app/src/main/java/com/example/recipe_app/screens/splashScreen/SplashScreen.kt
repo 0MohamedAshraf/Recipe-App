@@ -1,4 +1,4 @@
-package com.example.recipe_app.screens
+package com.example.recipe_app.screens.splashScreen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

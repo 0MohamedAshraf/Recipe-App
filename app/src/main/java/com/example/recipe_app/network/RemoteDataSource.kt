@@ -1,7 +1,7 @@
-package com.example.recipe_app.dataSource.network
+package com.example.recipe_app.network
 
-import com.example.recipe_app.dataSource.network.dto.CategoriesResponse
-import com.example.recipe_app.dataSource.network.dto.MealResponse
+import com.example.recipe_app.screens.homeScreen.dto.CategoriesResponse
+import com.example.recipe_app.screens.homeScreen.dto.MealResponse
 import retrofit2.Response
 
 interface RemoteDataSource {
