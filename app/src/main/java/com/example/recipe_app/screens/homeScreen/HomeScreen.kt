@@ -129,7 +129,7 @@ fun HomeScreenPreview(){
                     }
                 }
             ) { innerPadding ->
-            HomeScreen(MealViewModel(MealRepositoryImpl(RemoteDataSourceImpl(ApiClient.service))),modifier = Modifier.fillMaxSize().padding(innerPadding))
+//            HomeScreen(MealViewModel(MealRepositoryImpl(RemoteDataSourceImpl(ApiClient.service))),modifier = Modifier.fillMaxSize().padding(innerPadding))
         }
     }
 }

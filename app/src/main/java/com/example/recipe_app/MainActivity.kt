@@ -34,11 +34,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.recipe_app.network.ApiClient
 import com.example.recipe_app.network.RemoteDataSourceImpl
+import com.example.recipe_app.screens.homeScreen.HomeScreen
+import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
-import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
 import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
@@ -69,12 +73,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             Recipe_AppTheme {
                 var selectedIndex by rememberSaveable { mutableStateOf(0) }
+
+                val navController = rememberNavController()
+                var inSplashScreen by rememberSaveable {mutableStateOf(true)}
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    topBar = { TopAppBar(
+                    topBar = {
+                        if(!inSplashScreen){
+                        TopAppBar(
                         title = {
                             Row (
                                 verticalAlignment = Alignment.CenterVertically
@@ -100,9 +110,11 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-
-                    ) },
+                        )
+                        }
+                    },
                     bottomBar = {
+                        if(!inSplashScreen){
                         NavigationBar {
                             NavBarItems.forEachIndexed { index, item ->
                                 NavigationBarItem(
@@ -124,12 +136,32 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+                        }
                     }
                 ) { innerPadding ->
+                    val modifier = Modifier.padding(innerPadding)
 
-                   SplashScreenAnimation(
-                      modifier = Modifier.padding(innerPadding)
-                   )
+                    NavHost(navController = navController, startDestination = Routes.Splash){
+                        composable<Routes.Splash>{
+                            SplashScreenAnimation(modifier) {
+                                navController.navigate(Routes.Home){
+                                    popUpTo<Routes.Splash>{inclusive = true}
+                                }
+
+                                inSplashScreen = false
+                            }
+                        }
+                        composable<Routes.Home>{
+                            with(mealViewModel){
+                                getRandomMeal()
+                                getAllCategories()
+                                getMealByCategory("Beef")
+                            }
+                            HomeScreen(mealViewModel,modifier)
+                        }
+
+                    }
+
 
                 }
             }
