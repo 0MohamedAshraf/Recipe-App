@@ -19,9 +19,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 //import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.recipe_app.ui.theme.Recipe_AppTheme
 
 data class Country(val name: String, val code: String, val flag: String)
 
@@ -30,7 +32,7 @@ fun isValidEmail(email: String): Boolean {
 }
 
 @Composable
-fun SignUpScreen() {
+fun SignUpScreen(modifier: Modifier= Modifier) {
 
     val context = LocalContext.current
 
@@ -72,7 +74,7 @@ fun SignUpScreen() {
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
@@ -339,5 +341,16 @@ fun SignUpScreen() {
                 }
             )
         }
+    }
+}
+@Preview
+@Composable
+fun SignUpScreenPreview() {
+    Recipe_AppTheme {
+Scaffold() {
+    InnerPadding->
+    SignUpScreen(Modifier.padding(InnerPadding))
+}
+
     }
 }
