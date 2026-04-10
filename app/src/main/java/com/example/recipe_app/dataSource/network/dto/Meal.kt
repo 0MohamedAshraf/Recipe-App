@@ -2,7 +2,7 @@ package com.example.recipe_app.dataSource.network.dto
 
 data class Meal(
     val dateModified: Any?,
-    val idMeal: String,
+    val idMeal: String?,
     val strArea: String?,
     val strCategory: String?,
     val strCreativeCommonsConfirmed: Any?,
@@ -28,7 +28,7 @@ data class Meal(
     val strIngredient8: String?,
     val strIngredient9: String?,
     val strInstructions: String?,
-    val strMeal: String,
+    val strMeal: String?,
     val strMealAlternate: Any?,
     val strMealThumb: String?,
     val strMeasure1: String?,
