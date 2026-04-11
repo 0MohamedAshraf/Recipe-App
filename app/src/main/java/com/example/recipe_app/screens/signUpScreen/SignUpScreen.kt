@@ -32,7 +32,11 @@ fun isValidEmail(email: String): Boolean {
 }
 
 @Composable
-fun SignUpScreen(modifier: Modifier= Modifier) {
+fun SignUpScreen(
+    modifier: Modifier= Modifier,
+    onLoginClick : () -> Unit,
+    onSignUpClick : () -> Unit
+    ) {
 
     val context = LocalContext.current
 
@@ -90,6 +94,7 @@ fun SignUpScreen(modifier: Modifier= Modifier) {
                     .align(Alignment.TopStart)
                     .size(28.dp)
                     .clickable {
+                        onLoginClick()
                     }
             )
         }
@@ -313,6 +318,7 @@ fun SignUpScreen(modifier: Modifier= Modifier) {
 
                 } else {
                     Toast.makeText(context, "Register Success", Toast.LENGTH_SHORT).show()
+                    onSignUpClick()
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = mainOrange),
@@ -338,6 +344,7 @@ fun SignUpScreen(modifier: Modifier= Modifier) {
                 fontWeight = FontWeight.Bold,
                 textDecoration = TextDecoration.Underline,
                 modifier = Modifier.clickable {
+                    onLoginClick()
                 }
             )
         }
@@ -349,7 +356,7 @@ fun SignUpScreenPreview() {
     Recipe_AppTheme {
 Scaffold() {
     InnerPadding->
-    SignUpScreen(Modifier.padding(InnerPadding))
+//    SignUpScreen(Modifier.padding(InnerPadding)){}
 }
 
     }
