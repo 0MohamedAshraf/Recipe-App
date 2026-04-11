@@ -1,6 +1,7 @@
 package com.example.recipe_app
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.recipe_app.network.ApiClient
 import com.example.recipe_app.network.RemoteDataSourceImpl
@@ -81,11 +83,11 @@ class MainActivity : ComponentActivity() {
                 var selectedIndex by rememberSaveable { mutableStateOf(0) }
 
                 val navController = rememberNavController()
-                var inSplashScreen by rememberSaveable { mutableStateOf(true) }
+                var showBars by rememberSaveable { mutableStateOf(true) }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
-                        if (!inSplashScreen) {
+                        if (!showBars) {
                             TopAppBar(
                                 title = {
                                     Row(
@@ -116,7 +118,7 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     bottomBar = {
-                        if (!inSplashScreen) {
+                        if (!showBars) {
                             NavigationBar {
                                 NavBarItems.forEachIndexed { index, item ->
                                     NavigationBarItem(
@@ -146,20 +148,51 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = Routes.Splash) {
                         composable<Routes.Splash> {
                             SplashScreenAnimation(modifier) {
-                                navController.navigate(Routes.Home) {
+                                navController.navigate(AuthGraph) {
                                     popUpTo<Routes.Splash> { inclusive = true }
                                 }
 
-                                inSplashScreen = false
                             }
                         }
-                        composable<Routes.Home> {
-                            with(mealViewModel) {
-                                getRandomMeal()
-                                getAllCategories()
-                                getMealByCategory("Beef")
+
+                        navigation<AuthGraph>(startDestination = Routes.SignUp){
+                            composable<Routes.SignIn>{
+                                SignInScreen(modifier = modifier, onSignUp = {
+                                    navController.navigate(Routes.SignUp)
+                                }
+                                ){
+//                                    navController.navigate(MainGraph){
+//                                        popUpTo<Routes.SignIn> { inclusive = true }
+//                                    }
+//                                    Log.d("Auth: ", " Logged In ")
+//                                    showBars = false
+                                }
                             }
-                            HomeScreen(mealViewModel, modifier)
+                            composable<Routes.SignUp>{
+                                SignUpScreen(modifier = modifier, onLoginClick = {
+                                    navController.popBackStack()
+                                }
+                                ){
+
+                                    // check first if the user registered successfully
+                                    navController.navigate(MainGraph){
+                                        popUpTo<Routes.SignUp>{ inclusive = true}
+                                    }
+                                    showBars = false
+                                }
+                            }
+                        }
+
+                        navigation<MainGraph>(startDestination = Routes.Home){
+
+                            composable<Routes.Home> {
+                               HomeScreen(mealViewModel, modifier)
+                               with(mealViewModel) {
+                                   getRandomMeal()
+                                   getAllCategories()
+                                   getMealByCategory("Beef")
+                               }
+                            }
                         }
 
                     }

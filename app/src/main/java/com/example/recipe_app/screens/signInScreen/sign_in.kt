@@ -47,9 +47,12 @@ import com.example.recipe_app.R
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview(showSystemUi = true, showBackground = true)
 @Composable
-fun SignInScreen() {
+fun SignInScreen(
+    modifier: Modifier = Modifier,
+    onSignUp : () -> Unit,
+    onLogin : () -> Unit
+    ) {
     val context = LocalContext.current
     Column( modifier = Modifier.fillMaxSize() ) {
 
@@ -158,7 +161,7 @@ fun SignInScreen() {
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(
-                onClick = { Toast.makeText(context,"going to Home screen", Toast.LENGTH_SHORT).show()},
+                onClick = onLogin ,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(58.dp),
@@ -213,7 +216,9 @@ fun SignInScreen() {
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Text("Don't have an account? ", color = Color.Gray)
-                Text("Sign Up", color = Color(0xFFF47B25), modifier = Modifier.clickable{ Toast.makeText(context,"Sign Up",
+                Text("Sign Up", color = Color(0xFFF47B25), modifier = Modifier.clickable{
+                    onSignUp()
+                    Toast.makeText(context,"Sign Up",
                     Toast.LENGTH_SHORT).show()}, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
 
