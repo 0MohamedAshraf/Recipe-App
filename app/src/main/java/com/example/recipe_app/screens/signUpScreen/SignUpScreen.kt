@@ -1,16 +1,16 @@
-
 package com.example.recipe_app
 
+import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,10 +20,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-//import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.auth.UserProfileChangeRequest
 
 data class Country(val name: String, val code: String, val flag: String)
 
@@ -33,21 +37,20 @@ fun isValidEmail(email: String): Boolean {
 
 @Composable
 fun SignUpScreen(
-    modifier: Modifier= Modifier,
-    onLoginClick : () -> Unit,
-    onSignUpClick : () -> Unit
-    ) {
-
+    modifier: Modifier = Modifier,
+    onLoginClick: () -> Unit = {}
+) {
     val context = LocalContext.current
+    val auth = remember { FirebaseAuth.getInstance() }
 
-    var firstName  by remember { mutableStateOf("") }
-    var lastName  by remember { mutableStateOf("") }
-    var email  by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-    var password  by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
     val mainOrange = Color(0xFFFF7A00)
-
 
     var selectedDay by remember { mutableStateOf("Day") }
     var selectedMonth by remember { mutableStateOf("Month") }
@@ -62,9 +65,9 @@ fun SignUpScreen(
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     )
-    val years = (1970..2025).map { it.toString() }
+    val years = (1970..2026).map { it.toString() }
 
-    var expanded by remember { mutableStateOf(false) }
+    var expandedCountry by remember { mutableStateOf(false) }
 
     val countries = listOf(
         Country("Egypt", "+20", "🇪🇬"),
@@ -93,9 +96,7 @@ fun SignUpScreen(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .size(28.dp)
-                    .clickable {
-                        onLoginClick()
-                    }
+                    .clickable { onLoginClick() }
             )
         }
 
@@ -120,7 +121,10 @@ fun SignUpScreen(
                         if (it.matches(Regex("^[a-zA-Z ]*$"))) {
                             firstName = it
                         }
-                    },                    modifier = Modifier.fillMaxWidth()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
                 )
             }
 
@@ -135,34 +139,41 @@ fun SignUpScreen(
                         if (it.matches(Regex("^[a-zA-Z ]*$"))) {
                             lastName = it
                         }
-                    },                    modifier = Modifier.fillMaxWidth()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Column {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text("Email")
             Spacer(modifier = Modifier.height(5.dp))
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Column {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text("Birthday")
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(modifier = Modifier.fillMaxWidth()) {
 
-                // Day
                 Box(modifier = Modifier.weight(1f)) {
-                    OutlinedButton(onClick = { expandedDay = true }) {
+                    OutlinedButton(
+                        onClick = { expandedDay = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(selectedDay)
                     }
 
@@ -170,11 +181,11 @@ fun SignUpScreen(
                         expanded = expandedDay,
                         onDismissRequest = { expandedDay = false }
                     ) {
-                        days.forEach {
+                        days.forEach { day ->
                             DropdownMenuItem(
-                                text = { Text(it) },
+                                text = { Text(day) },
                                 onClick = {
-                                    selectedDay = it
+                                    selectedDay = day
                                     expandedDay = false
                                 }
                             )
@@ -185,7 +196,10 @@ fun SignUpScreen(
                 Spacer(modifier = Modifier.width(5.dp))
 
                 Box(modifier = Modifier.weight(1f)) {
-                    OutlinedButton(onClick = { expandedMonth = true }) {
+                    OutlinedButton(
+                        onClick = { expandedMonth = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(selectedMonth)
                     }
 
@@ -193,11 +207,11 @@ fun SignUpScreen(
                         expanded = expandedMonth,
                         onDismissRequest = { expandedMonth = false }
                     ) {
-                        months.forEach {
+                        months.forEach { month ->
                             DropdownMenuItem(
-                                text = { Text(it) },
+                                text = { Text(month) },
                                 onClick = {
-                                    selectedMonth = it
+                                    selectedMonth = month
                                     expandedMonth = false
                                 }
                             )
@@ -208,7 +222,10 @@ fun SignUpScreen(
                 Spacer(modifier = Modifier.width(5.dp))
 
                 Box(modifier = Modifier.weight(1f)) {
-                    OutlinedButton(onClick = { expandedYear = true }) {
+                    OutlinedButton(
+                        onClick = { expandedYear = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(selectedYear)
                     }
 
@@ -216,11 +233,11 @@ fun SignUpScreen(
                         expanded = expandedYear,
                         onDismissRequest = { expandedYear = false }
                     ) {
-                        years.forEach {
+                        years.forEach { year ->
                             DropdownMenuItem(
-                                text = { Text(it) },
+                                text = { Text(year) },
                                 onClick = {
-                                    selectedYear = it
+                                    selectedYear = year
                                     expandedYear = false
                                 }
                             )
@@ -232,19 +249,20 @@ fun SignUpScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Column {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text("Phone Number")
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(modifier = Modifier.fillMaxWidth()) {
 
                 Box {
-                    OutlinedButton(onClick = { expanded = true }) {
+                    OutlinedButton(onClick = { expandedCountry = true }) {
                         Text("${selectedCountry.flag} ${selectedCountry.code}")
                     }
 
                     DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        expanded = expandedCountry,
+                        onDismissRequest = { expandedCountry = false }
                     ) {
                         countries.forEach { country ->
                             DropdownMenuItem(
@@ -257,7 +275,7 @@ fun SignUpScreen(
                                 },
                                 onClick = {
                                     selectedCountry = country
-                                    expanded = false
+                                    expandedCountry = false
                                 }
                             )
                         }
@@ -266,22 +284,23 @@ fun SignUpScreen(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-
-                    OutlinedTextField(
-                        value = phone,
-                        onValueChange = {
-                            if (it.matches(Regex("^[0-9]*$"))) {
-                                phone = it
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = {
+                        if (it.matches(Regex("^[0-9]*$"))) {
+                            phone = it
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Column {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text("Password")
             Spacer(modifier = Modifier.height(5.dp))
             OutlinedTextField(
@@ -289,7 +308,8 @@ fun SignUpScreen(
                 onValueChange = { password = it },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true
             )
         }
 
@@ -297,34 +317,118 @@ fun SignUpScreen(
 
         Button(
             onClick = {
+                when {
+                    firstName.isBlank() ||
+                            lastName.isBlank() ||
+                            email.isBlank() ||
+                            phone.isBlank() ||
+                            password.isBlank() -> {
+                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    }
 
-                if (
-                    firstName.isEmpty() ||
-                    lastName.isEmpty() ||
-                    email.isEmpty() ||
-                    password.isEmpty()
-                ) {
-                    Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    !isValidEmail(email.trim()) -> {
+                        Toast.makeText(context, "Invalid Email", Toast.LENGTH_SHORT).show()
+                    }
 
-                } else if (!isValidEmail(email)) {
-                    Toast.makeText(context, "Invalid Email", Toast.LENGTH_SHORT).show()
+                    password.length < 6 -> {
+                        Toast.makeText(
+                            context,
+                            "Password must be at least 6 characters",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
 
-                } else if (
                     selectedDay == "Day" ||
-                    selectedMonth == "Month" ||
-                    selectedYear == "Year"
-                ) {
-                    Toast.makeText(context, "Select valid birthday", Toast.LENGTH_SHORT).show()
+                            selectedMonth == "Month" ||
+                            selectedYear == "Year" -> {
+                        Toast.makeText(context, "Select valid birthday", Toast.LENGTH_SHORT).show()
+                    }
 
-                } else {
-                    Toast.makeText(context, "Register Success", Toast.LENGTH_SHORT).show()
-                    onSignUpClick()
+                    else -> {
+                        isLoading = true
+
+                        auth.createUserWithEmailAndPassword(email.trim(), password)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val user = auth.currentUser
+
+                                    val profileUpdates = UserProfileChangeRequest.Builder()
+                                        .setDisplayName("$firstName $lastName")
+                                        .build()
+
+                                    user?.updateProfile(profileUpdates)
+
+                                    user?.sendEmailVerification()
+                                        ?.addOnCompleteListener { verifyTask ->
+                                            isLoading = false
+
+                                            auth.signOut()
+
+                                            if (verifyTask.isSuccessful) {
+                                                Log.d(
+                                                    "SignUpDebug",
+                                                    "User created and verification sent: uid=${user?.uid}, email=${user?.email}"
+                                                )
+
+                                                Toast.makeText(
+                                                    context,
+                                                    "Account created. Please verify your email first.",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            } else {
+                                                Log.e(
+                                                    "SignUpDebug",
+                                                    "Verification email failed",
+                                                    verifyTask.exception
+                                                )
+
+                                                Toast.makeText(
+                                                    context,
+                                                    "Account created, but verification email was not sent.",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+
+                                            onLoginClick()
+                                        }
+                                } else {
+                                    isLoading = false
+
+                                    val e = task.exception
+                                    Log.e("SignUpDebug", "createUser failed", e)
+
+                                    val message = when (e) {
+                                        is FirebaseAuthUserCollisionException ->
+                                            "This email is already registered"
+
+                                        is FirebaseAuthWeakPasswordException ->
+                                            "Weak password"
+
+                                        is FirebaseAuthInvalidCredentialsException ->
+                                            "Invalid email format"
+
+                                        else ->
+                                            e?.localizedMessage ?: "Registration failed"
+                                    }
+
+                                    Toast.makeText(
+                                        context,
+                                        message,
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                    }
                 }
             },
+            enabled = !isLoading,
             colors = ButtonDefaults.buttonColors(containerColor = mainOrange),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Register", color = Color.White)
+            Text(
+                text = if (isLoading) "Loading..." else "Register",
+                color = Color.White
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -332,8 +436,6 @@ fun SignUpScreen(
         Text(text = "Or login with", color = Color.Gray)
 
         Spacer(modifier = Modifier.height(15.dp))
-
-
 
         Row {
             Text("Already have an account? ")
@@ -343,21 +445,21 @@ fun SignUpScreen(
                 color = Color.Blue,
                 fontWeight = FontWeight.Bold,
                 textDecoration = TextDecoration.Underline,
-                modifier = Modifier.clickable {
-                    onLoginClick()
-                }
+                modifier = Modifier.clickable { onLoginClick() }
             )
         }
     }
 }
-@Preview
+
+@Preview(showBackground = true)
 @Composable
 fun SignUpScreenPreview() {
     Recipe_AppTheme {
-Scaffold() {
-    InnerPadding->
-//    SignUpScreen(Modifier.padding(InnerPadding)){}
-}
-
+        Scaffold { innerPadding ->
+            SignUpScreen(
+                modifier = Modifier.padding(innerPadding),
+                onLoginClick = {}
+            )
+        }
     }
 }

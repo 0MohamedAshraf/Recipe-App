@@ -3,19 +3,22 @@ package com.example.recipe_app
 import kotlinx.serialization.Serializable
 
 @Serializable
-object MainGraph
-@Serializable
 object AuthGraph
+
+@Serializable
+object MainGraph
 
 sealed interface Routes {
 
     @Serializable
-    object Home
+    data object Splash : Routes
 
     @Serializable
-    object Splash
+    data object SignIn : Routes
+
     @Serializable
-    object SignIn
+    data object SignUp : Routes
+
     @Serializable
-    object SignUp
+    data object Home : Routes
 }

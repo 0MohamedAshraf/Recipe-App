@@ -1,7 +1,6 @@
 package com.example.recipe_app
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -31,7 +30,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.recipe_app.screens.signInScreen.SignInScreen
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -46,23 +44,26 @@ import com.example.recipe_app.screens.homeScreen.HomeScreen
 import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
+import com.example.recipe_app.screens.signInScreen.SignInScreen
 import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
 import com.example.recipe_app.ui.theme.OrangeVariant
-
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
+import com.google.firebase.auth.FirebaseAuth
 
 data class BottomNavBarItem(
     val label: String,
     val icon: ImageVector
 )
-val NavBarItems = listOf(
+
+val navBarItems = listOf(
     BottomNavBarItem("HOME", Icons.Outlined.Home),
     BottomNavBarItem("SEARCH", Icons.Outlined.Search),
     BottomNavBarItem("FAVORITES", Icons.Outlined.FavoriteBorder),
     BottomNavBarItem("PROFILE", Icons.Outlined.Person)
-
 )
+
 class MainActivity : ComponentActivity() {
+
     private val mealViewModel: MealViewModel by viewModels {
         MealViewModelFactory(
             repository = MealRepositoryImpl(
@@ -80,26 +81,25 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             Recipe_AppTheme {
-                var selectedIndex by rememberSaveable { mutableStateOf(0) }
-
                 val navController = rememberNavController()
-                var showBars by rememberSaveable { mutableStateOf(true) }
+                val auth = FirebaseAuth.getInstance()
+
+                var selectedIndex by rememberSaveable { mutableStateOf(0) }
+                var showBars by rememberSaveable { mutableStateOf(false) }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
-                        if (!showBars) {
+                        if (showBars) {
                             TopAppBar(
                                 title = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             painter = painterResource(R.drawable.spoon_knife_icon),
                                             contentDescription = "Title Icon",
                                             tint = OrangeVariant
                                         )
-
-                                        Spacer(Modifier.width(8.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = "RecipeHome",
                                             fontWeight = FontWeight.Bold
@@ -113,95 +113,151 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier.padding(end = 8.dp)
                                     )
                                 }
-
                             )
                         }
                     },
                     bottomBar = {
-                        if (!showBars) {
+                        if (showBars) {
                             NavigationBar {
-                                NavBarItems.forEachIndexed { index, item ->
+                                navBarItems.forEachIndexed { index, item ->
                                     NavigationBarItem(
                                         selected = selectedIndex == index,
+                                        onClick = {
+                                            selectedIndex = index
+                                        },
                                         icon = {
                                             Icon(
                                                 imageVector = item.icon,
-                                                contentDescription = null,
-                                                tint =
-                                                    if (selectedIndex == index) OrangeVariant
-                                                    else LocalContentColor.current
+                                                contentDescription = item.label,
+                                                tint = if (selectedIndex == index) {
+                                                    OrangeVariant
+                                                } else {
+                                                    LocalContentColor.current
+                                                }
                                             )
                                         },
-                                        label = { Text(item.label) },
-                                        onClick = {
-                                            selectedIndex = index
-                                            item.icon.tintColor
-                                        }
+                                        label = { Text(item.label) }
                                     )
                                 }
                             }
                         }
                     }
                 ) { innerPadding ->
-                    val modifier = Modifier.padding(innerPadding)
 
-                    NavHost(navController = navController, startDestination = Routes.Splash) {
+                    val screenModifier = Modifier.padding(innerPadding)
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = Routes.Splash
+                    ) {
+
                         composable<Routes.Splash> {
-                            SplashScreenAnimation(modifier) {
-                                navController.navigate(AuthGraph) {
-                                    popUpTo<Routes.Splash> { inclusive = true }
-                                }
+                            showBars = false
 
+                            SplashScreenAnimation(
+                                modifier = screenModifier,
+                                onAnimationEnd = {
+                                    val currentUser = auth.currentUser
+
+                                    if (currentUser != null) {
+                                        currentUser.reload().addOnCompleteListener {
+                                            val updatedUser = auth.currentUser
+
+                                            if (updatedUser != null && updatedUser.isEmailVerified) {
+                                                showBars = true
+                                                navController.navigate(route = MainGraph) {
+                                                    popUpTo<Routes.Splash> {
+                                                        inclusive = true
+                                                    }
+                                                    launchSingleTop = true
+                                                }
+                                            } else {
+                                                auth.signOut()
+                                                showBars = false
+                                                navController.navigate(route = AuthGraph) {
+                                                    popUpTo<Routes.Splash> {
+                                                        inclusive = true
+                                                    }
+                                                    launchSingleTop = true
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        showBars = false
+                                        navController.navigate(route = AuthGraph) {
+                                            popUpTo<Routes.Splash> {
+                                                inclusive = true
+                                            }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                }
+                            )
+                        }
+
+                        navigation<AuthGraph>(startDestination = Routes.SignIn) {
+
+                            composable<Routes.SignIn> {
+                                showBars = false
+
+                                SignInScreen(
+                                    modifier = screenModifier,
+                                    onSignUp = {
+                                        navController.navigate(route = Routes.SignUp)
+                                    },
+                                    onLogin = {
+                                        showBars = true
+                                        navController.navigate(route = MainGraph) {
+                                            popUpTo<AuthGraph> {
+                                                inclusive = true
+                                            }
+                                            launchSingleTop = true
+                                        }
+                                    },
+                                    onContinueAsGuest = {
+                                        showBars = true
+                                        navController.navigate(route = MainGraph) {
+                                            popUpTo<AuthGraph> {
+                                                inclusive = true
+                                            }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                )
+                            }
+
+                            composable<Routes.SignUp> {
+                                showBars = false
+
+                                SignUpScreen(
+                                    modifier = screenModifier,
+                                    onLoginClick = {
+                                        navController.popBackStack()
+                                    }
+                                )
                             }
                         }
 
-                        navigation<AuthGraph>(startDestination = Routes.SignIn){
-                            composable<Routes.SignIn>{
-                                SignInScreen(modifier = modifier, onSignUpClick = {
-                                    navController.navigate(Routes.SignUp)
-                                }
-                                ){
-                                    // check first if the user authenticated
-                                    navController.navigate(MainGraph){
-                                        popUpTo<Routes.SignIn> { inclusive = true }
-                                    }
-                                    Log.d("Auth: ", " Logged In ")
-                                    showBars = false
-                                }
-                            }
-                            composable<Routes.SignUp>{
-                                SignUpScreen(modifier = modifier, onLoginClick = {
-                                    navController.popBackStack()
-                                }
-                                ){
-
-                                    // check first if the user registered successfully
-                                    navController.navigate(MainGraph){
-                                        popUpTo<Routes.SignUp>{ inclusive = true}
-                                    }
-                                    showBars = false
-                                }
-                            }
-                        }
-
-                        navigation<MainGraph>(startDestination = Routes.Home){
+                        navigation<MainGraph>(startDestination = Routes.Home) {
 
                             composable<Routes.Home> {
-                               HomeScreen(mealViewModel, modifier)
-                               with(mealViewModel) {
-                                   getRandomMeal()
-                                   getAllCategories()
-                                   getMealByCategory("Beef")
-                               }
+                                showBars = true
+
+                                HomeScreen(
+                                    mealViewModel = mealViewModel,
+                                    modifier = screenModifier
+                                )
+
+                                with(mealViewModel) {
+                                    getRandomMeal()
+                                    getAllCategories()
+                                    getMealByCategory("Beef")
+                                }
                             }
                         }
-
                     }
-
-
                 }
             }
         }
     }
-
 }
