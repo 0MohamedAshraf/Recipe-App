@@ -155,17 +155,18 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        navigation<AuthGraph>(startDestination = Routes.SignUp){
+                        navigation<AuthGraph>(startDestination = Routes.SignIn){
                             composable<Routes.SignIn>{
-                                SignInScreen(modifier = modifier, onSignUp = {
+                                SignInScreen(modifier = modifier, onSignUpClick = {
                                     navController.navigate(Routes.SignUp)
                                 }
                                 ){
-//                                    navController.navigate(MainGraph){
-//                                        popUpTo<Routes.SignIn> { inclusive = true }
-//                                    }
-//                                    Log.d("Auth: ", " Logged In ")
-//                                    showBars = false
+                                    // check first if the user authenticated
+                                    navController.navigate(MainGraph){
+                                        popUpTo<Routes.SignIn> { inclusive = true }
+                                    }
+                                    Log.d("Auth: ", " Logged In ")
+                                    showBars = false
                                 }
                             }
                             composable<Routes.SignUp>{
