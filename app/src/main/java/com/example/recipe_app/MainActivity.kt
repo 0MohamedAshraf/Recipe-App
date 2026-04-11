@@ -4,79 +4,169 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.runtime.*
-import androidx.compose.ui.tooling.preview.Preview
-import com.airbnb.lottie.compose.*
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.recipe_app.network.ApiClient
+import com.example.recipe_app.network.RemoteDataSourceImpl
+import com.example.recipe_app.screens.homeScreen.HomeScreen
+import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
+import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
+import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
+import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
+import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
-import androidx.navigation.compose.*
-import kotlinx.coroutines.delay
 
+data class BottomNavBarItem(
+    val label: String,
+    val icon: ImageVector
+)
+val NavBarItems = listOf(
+    BottomNavBarItem("HOME", Icons.Outlined.Home),
+    BottomNavBarItem("SEARCH", Icons.Outlined.Search),
+    BottomNavBarItem("FAVORITES", Icons.Outlined.FavoriteBorder),
+    BottomNavBarItem("PROFILE", Icons.Outlined.Person)
+
+)
 class MainActivity : ComponentActivity() {
+    private val mealViewModel : MealViewModel by viewModels {
+        MealViewModelFactory(
+            repository = MealRepositoryImpl(
+                remoteDataSource = RemoteDataSourceImpl(
+                    apiService = ApiClient.service
+                )
+            )
+        )
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContent {
             Recipe_AppTheme {
+                var selectedIndex by rememberSaveable { mutableStateOf(0) }
 
                 val navController = rememberNavController()
+                var inSplashScreen by rememberSaveable {mutableStateOf(true)}
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    topBar = {
+                        if(!inSplashScreen){
+                        TopAppBar(
+                        title = {
+                            Row (
+                                verticalAlignment = Alignment.CenterVertically
+                            ){
+                                Icon(
+                                    painter = painterResource(R.drawable.spoon_knife_icon),
+                                    contentDescription = "Title Icon",
+                                    tint = OrangeVariant
+                                )
 
-                NavHost(
-                    navController = navController,
-                    startDestination = "splash"
-                ) {
-
-                    composable("splash") {
-
-                        LaunchedEffect(Unit) {
-                            delay(3000)
-                            navController.navigate("signup") {
-                                popUpTo("splash") { inclusive = true }
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "RecipeHome",
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
+                        },
+                        actions = {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = "Notifications",
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
                         }
 
-                        SplashScreenAnimation()
+                        )
+                        }
+                    },
+                    bottomBar = {
+                        if(!inSplashScreen){
+                        NavigationBar {
+                            NavBarItems.forEachIndexed { index, item ->
+                                NavigationBarItem(
+                                    selected = selectedIndex == index,
+                                    icon = {
+                                        Icon(
+                                            imageVector = item.icon,
+                                            contentDescription = null,
+                                            tint =
+                                                if(selectedIndex == index) OrangeVariant
+                                                else LocalContentColor.current
+                                        )
+                                    },
+                                    label = {Text(item.label)},
+                                    onClick = {
+                                        selectedIndex = index
+                                        item.icon.tintColor
+                                    }
+                                )
+                            }
+                        }
+                        }
+                    }
+                ) { innerPadding ->
+                    val modifier = Modifier.padding(innerPadding)
+
+                    NavHost(navController = navController, startDestination = Routes.Splash){
+                        composable<Routes.Splash>{
+                            SplashScreenAnimation(modifier) {
+                                navController.navigate(Routes.Home){
+                                    popUpTo<Routes.Splash>{inclusive = true}
+                                }
+
+                                inSplashScreen = false
+                            }
+                        }
+                        composable<Routes.Home>{
+                            with(mealViewModel){
+                                getRandomMeal()
+                                getAllCategories()
+                                getMealByCategory("Beef")
+                            }
+                            HomeScreen(mealViewModel,modifier)
+                        }
+
                     }
 
-                    composable("signup") {
-                        SignUpScreen()
-                    }
+
                 }
             }
         }
     }
 }
 
-@Composable
-fun SplashScreenAnimation(modifier: Modifier = Modifier) {
 
-    val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.food_prep)
-    )
-
-    val progress by animateLottieCompositionAsState(
-        composition = composition,
-        iterations = LottieConstants.IterateForever
-    )
-
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        LottieAnimation(
-            composition = composition,
-            progress = { progress }
-        )
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun GreetingPreview() {
-    Recipe_AppTheme {
-    }
-}

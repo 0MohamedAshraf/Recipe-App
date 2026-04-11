@@ -1,4 +1,4 @@
-package com.example.recipe_app.dataSource.network
+package com.example.recipe_app.network
 
 import com.google.gson.GsonBuilder
 import retrofit2.Retrofit
@@ -9,7 +9,7 @@ object ApiClient {
     private val gson = GsonBuilder().serializeNulls().create()
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("www.themealdb.com/api/json/v1/1/")
+        .baseUrl("https://www.themealdb.com/api/json/v1/1/")
         .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
 
