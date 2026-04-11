@@ -40,7 +40,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.recipe_app.R
@@ -50,8 +49,8 @@ import com.example.recipe_app.R
 @Composable
 fun SignInScreen(
     modifier: Modifier = Modifier,
-    onSignUp : () -> Unit,
-    onLogin : () -> Unit
+    onSignUpClick : () -> Unit,
+    onLoginClick : () -> Unit
     ) {
     val context = LocalContext.current
     Column( modifier = Modifier.fillMaxSize() ) {
@@ -161,7 +160,7 @@ fun SignInScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(
-                onClick = onLogin ,
+                onClick = onLoginClick ,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(58.dp),
@@ -217,7 +216,7 @@ fun SignInScreen(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Text("Don't have an account? ", color = Color.Gray)
                 Text("Sign Up", color = Color(0xFFF47B25), modifier = Modifier.clickable{
-                    onSignUp()
+                    onSignUpClick()
                     Toast.makeText(context,"Sign Up",
                     Toast.LENGTH_SHORT).show()}, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
