@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.recipe_app.screens.signInScreen.SignInScreen
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +46,7 @@ import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
 import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
 import com.example.recipe_app.ui.theme.OrangeVariant
+
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 
 data class BottomNavBarItem(
@@ -59,7 +61,7 @@ val NavBarItems = listOf(
 
 )
 class MainActivity : ComponentActivity() {
-    private val mealViewModel : MealViewModel by viewModels {
+    private val mealViewModel: MealViewModel by viewModels {
         MealViewModelFactory(
             repository = MealRepositoryImpl(
                 remoteDataSource = RemoteDataSourceImpl(
@@ -79,85 +81,85 @@ class MainActivity : ComponentActivity() {
                 var selectedIndex by rememberSaveable { mutableStateOf(0) }
 
                 val navController = rememberNavController()
-                var inSplashScreen by rememberSaveable {mutableStateOf(true)}
+                var inSplashScreen by rememberSaveable { mutableStateOf(true) }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
-                        if(!inSplashScreen){
-                        TopAppBar(
-                        title = {
-                            Row (
-                                verticalAlignment = Alignment.CenterVertically
-                            ){
-                                Icon(
-                                    painter = painterResource(R.drawable.spoon_knife_icon),
-                                    contentDescription = "Title Icon",
-                                    tint = OrangeVariant
-                                )
+                        if (!inSplashScreen) {
+                            TopAppBar(
+                                title = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.spoon_knife_icon),
+                                            contentDescription = "Title Icon",
+                                            tint = OrangeVariant
+                                        )
 
-                                Spacer(Modifier.width(8.dp))
-                                Text(
-                                    text = "RecipeHome",
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        },
-                        actions = {
-                            Icon(
-                                imageVector = Icons.Outlined.Notifications,
-                                contentDescription = "Notifications",
-                                modifier = Modifier.padding(end = 8.dp)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = "RecipeHome",
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                },
+                                actions = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Notifications,
+                                        contentDescription = "Notifications",
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                }
+
                             )
-                        }
-
-                        )
                         }
                     },
                     bottomBar = {
-                        if(!inSplashScreen){
-                        NavigationBar {
-                            NavBarItems.forEachIndexed { index, item ->
-                                NavigationBarItem(
-                                    selected = selectedIndex == index,
-                                    icon = {
-                                        Icon(
-                                            imageVector = item.icon,
-                                            contentDescription = null,
-                                            tint =
-                                                if(selectedIndex == index) OrangeVariant
-                                                else LocalContentColor.current
-                                        )
-                                    },
-                                    label = {Text(item.label)},
-                                    onClick = {
-                                        selectedIndex = index
-                                        item.icon.tintColor
-                                    }
-                                )
+                        if (!inSplashScreen) {
+                            NavigationBar {
+                                NavBarItems.forEachIndexed { index, item ->
+                                    NavigationBarItem(
+                                        selected = selectedIndex == index,
+                                        icon = {
+                                            Icon(
+                                                imageVector = item.icon,
+                                                contentDescription = null,
+                                                tint =
+                                                    if (selectedIndex == index) OrangeVariant
+                                                    else LocalContentColor.current
+                                            )
+                                        },
+                                        label = { Text(item.label) },
+                                        onClick = {
+                                            selectedIndex = index
+                                            item.icon.tintColor
+                                        }
+                                    )
+                                }
                             }
-                        }
                         }
                     }
                 ) { innerPadding ->
                     val modifier = Modifier.padding(innerPadding)
 
-                    NavHost(navController = navController, startDestination = Routes.Splash){
-                        composable<Routes.Splash>{
+                    NavHost(navController = navController, startDestination = Routes.Splash) {
+                        composable<Routes.Splash> {
                             SplashScreenAnimation(modifier) {
-                                navController.navigate(Routes.Home){
-                                    popUpTo<Routes.Splash>{inclusive = true}
+                                navController.navigate(Routes.Home) {
+                                    popUpTo<Routes.Splash> { inclusive = true }
                                 }
 
                                 inSplashScreen = false
                             }
                         }
-                        composable<Routes.Home>{
-                            with(mealViewModel){
+                        composable<Routes.Home> {
+                            with(mealViewModel) {
                                 getRandomMeal()
                                 getAllCategories()
                                 getMealByCategory("Beef")
                             }
-                            HomeScreen(mealViewModel,modifier)
+                            HomeScreen(mealViewModel, modifier)
                         }
 
                     }
@@ -167,6 +169,5 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 }
-
-
