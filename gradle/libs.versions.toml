@@ -16,6 +16,9 @@ glideVersion = "5.0.5"
 lottieVersion = "6.7.1"
 animationCoreLint = "1.10.6"
 
+nav_Version = "2.9.7"
+coil_Version = "3.4.0"
+serializationVersion = "1.7.3"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -42,9 +45,14 @@ activity-ktx = { group = "androidx.activity",name = "activity-ktx", version.ref 
 lottie-compose = { group = "com.airbnb.android",name = "lottie-compose", version.ref = "lottieVersion"}
 androidx-compose-animation-core-lint = { group = "androidx.compose.animation", name = "animation-core-lint", version.ref = "animationCoreLint" }
 
+navigation-compose = { group = "androidx.navigation",name = "navigation-compose", version.ref = "nav_Version"}
+coil-compose = { group = "io.coil-kt.coil3",name = "coil-compose", version.ref = "coil_Version"}
+coil-network-okhttp = { group = "io.coil-kt.coil3",name = "coil-network-okhttp", version.ref = "coil_Version"}
+kotlinx-serialization = { group = "org.jetbrains.kotlinx",name = "kotlinx-serialization-json", version.ref = "serializationVersion"}
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion"}
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 
