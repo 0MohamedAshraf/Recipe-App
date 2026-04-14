@@ -2,6 +2,7 @@ package com.example.recipe_app.screens.signInScreen
 
 
 import androidx.compose.material.icons.filled.Visibility
+import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -69,6 +71,65 @@ fun SignInScreen() {
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp
 
+import com.example.recipe_app.ui.theme.Recipe_AppTheme
+import com.google.firebase.auth.FirebaseAuth
+
+fun isValidLoginEmail(email: String): Boolean {
+    return Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SignInScreen(
+    modifier: Modifier = Modifier,
+    onSignUp: () -> Unit = {},
+    onLogin: () -> Unit = {},
+    onContinueAsGuest: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    val auth = remember { FirebaseAuth.getInstance() }
+
+    var userEmailAddress by rememberSaveable { mutableStateOf("") }
+    var userPassword by rememberSaveable { mutableStateOf("") }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            currentUser.reload().addOnCompleteListener {
+                val updatedUser = auth.currentUser
+
+                if (updatedUser != null && updatedUser.isEmailVerified) {
+                    onLogin()
+                } else {
+                    auth.signOut()
+                }
+            }
+        }
+    }
+
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(28.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+
+                Text(
+                    text = "Sign In",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -88,12 +149,15 @@ fun SignInScreen() {
             Spacer(modifier = Modifier.height(16.dp))
 
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
                 text = "Welcome Back",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
+
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
@@ -115,11 +179,27 @@ fun SignInScreen() {
                 isError = isError,
                 supportingText = {
                     if (isError) {
+
+            OutlinedTextField(
+                value = userEmailAddress,
+                onValueChange = {
+                    userEmailAddress = it
+                    emailError = false
+                },
+                placeholder = { Text("Enter your email") },
+                leadingIcon = {
+                    Icon(Icons.Default.Email, contentDescription = "Email Icon")
+                },
+                isError = emailError,
+                supportingText = {
+                    if (emailError) {
                         Text("Enter a valid email")
                     }
                 },
                 shape = RoundedCornerShape(25.dp),
                 modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -138,12 +218,19 @@ fun SignInScreen() {
                     IconButton(onClick = {
                         passwordVisible = !passwordVisible
                     }) {
+                    Icon(Icons.Default.Lock, contentDescription = "Password Icon")
+                },
+                trailingIcon = {
+                    IconButton(
+                        onClick = { passwordVisible = !passwordVisible }
+                    ) {
                         Icon(
                             imageVector = if (passwordVisible)
                                 Icons.Default.Visibility
                             else
                                 Icons.Default.VisibilityOff,
                             contentDescription = null
+                            contentDescription = "Toggle Password Visibility"
                         )
                     }
                 },
@@ -153,12 +240,98 @@ fun SignInScreen() {
                     PasswordVisualTransformation(),
                 shape = RoundedCornerShape(25.dp),
                 modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(
                 onClick = { Toast.makeText(context,"going to Home screen", Toast.LENGTH_SHORT).show()},
+                onClick = {
+                    when {
+                        userEmailAddress.isBlank() || userPassword.isBlank() -> {
+                            Toast.makeText(
+                                context,
+                                "Please enter email and password",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        !isValidLoginEmail(userEmailAddress.trim()) -> {
+                            emailError = true
+                            Toast.makeText(
+                                context,
+                                "Invalid email address",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        userPassword.length < 6 -> {
+                            Toast.makeText(
+                                context,
+                                "Password must be at least 6 characters",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        else -> {
+                            isLoading = true
+
+                            auth.signInWithEmailAndPassword(
+                                userEmailAddress.trim(),
+                                userPassword
+                            ).addOnCompleteListener { task ->
+
+                                if (task.isSuccessful) {
+                                    val user = auth.currentUser
+
+                                    user?.reload()?.addOnCompleteListener { reloadTask ->
+                                        isLoading = false
+
+                                        if (reloadTask.isSuccessful) {
+                                            val updatedUser = auth.currentUser
+
+                                            if (updatedUser != null && updatedUser.isEmailVerified) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Login successful",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                onLogin()
+                                            } else {
+                                                auth.signOut()
+
+                                                Toast.makeText(
+                                                    context,
+                                                    "Please verify your email first",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                        } else {
+                                            auth.signOut()
+
+                                            Toast.makeText(
+                                                context,
+                                                "Failed to refresh verification status",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                } else {
+                                    isLoading = false
+
+                                    Toast.makeText(
+                                        context,
+                                        task.exception?.localizedMessage ?: "Authentication failed",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        }
+                    }
+                },
+                enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(58.dp),
@@ -169,12 +342,24 @@ fun SignInScreen() {
             ) {
                 Text("Sign In", color = Color.White,fontSize = 20.sp,
                     fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (isLoading) "Loading..." else "Sign In",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Text("OR CONTINUE WITH", color = Color.Gray,fontSize = 16.sp,
                 modifier = Modifier.align(Alignment.CenterHorizontally))
+            Text(
+                text = "OR CONTINUE WITH",
+                color = Color.Gray,
+                fontSize = 16.sp,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -197,6 +382,50 @@ fun SignInScreen() {
                     contentDescription = null)
 
 
+                Icon(
+                    painter = painterResource(id = R.drawable.search),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable {
+                            Toast.makeText(
+                                context,
+                                "Google sign in not added yet",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                    tint = Color.Unspecified
+                )
+
+                Icon(
+                    painter = painterResource(id = R.drawable.facebook),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable {
+                            Toast.makeText(
+                                context,
+                                "Facebook sign in not added yet",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                    tint = Color.Unspecified
+                )
+
+                Icon(
+                    painter = painterResource(id = R.drawable.twitter),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable {
+                            Toast.makeText(
+                                context,
+                                "X sign in not added yet",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                    tint = Color.Unspecified
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -207,6 +436,14 @@ fun SignInScreen() {
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFF47B25),  modifier = Modifier.align(Alignment.CenterHorizontally)
                     .clickable{Toast.makeText(context, "Continue as guest", Toast.LENGTH_SHORT).show()}
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFF47B25),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .clickable {
+                        onContinueAsGuest()
+                    }
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -221,3 +458,30 @@ fun SignInScreen() {
     }
 }
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text("Don't have an account? ", color = Color.Gray)
+
+                Text(
+                    text = "Sign Up",
+                    color = Color(0xFFF47B25),
+                    modifier = Modifier.clickable {
+                        onSignUp()
+                    },
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SignInScreenPreview() {
+    Recipe_AppTheme {
+        SignInScreen()
+    }
+}
