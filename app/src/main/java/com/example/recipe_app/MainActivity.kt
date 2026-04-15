@@ -25,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.example.recipe_app.screens.signInScreen.SignInScreen
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
@@ -49,7 +48,6 @@ import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
 import com.example.recipe_app.screens.signInScreen.SignInScreen
 import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
 import com.example.recipe_app.ui.theme.OrangeVariant
-
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 import com.google.firebase.auth.FirebaseAuth
 
@@ -83,55 +81,50 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
-                            when {
-                                currentScreen?.hasRoute<Routes.Home>() == true -> HomeTopBar()
-                                currentScreen?.hasRoute<Routes.Details>() == true -> {
-                                    DetailsTopBar(
-                                        onBackClick = {navController.popBackStack()},
-                                        onFavoriteClick = {},
-                                        onShareClick = {}
-                                    )
-                                }
-                                else -> {}
-
+                        when {
+                            currentScreen?.hasRoute<Routes.Home>() == true -> HomeTopBar()
+                            currentScreen?.hasRoute<Routes.Details>() == true -> {
+                                DetailsTopBar(
+                                    onBackClick = {navController.popBackStack()},
+                                    onFavoriteClick = {},
+                                    onShareClick = {}
+                                )
                             }
+                            else -> {}
+
+                        }
                     },
                     bottomBar = {
                         when{
-                           currentScreen?.hasRoute<Routes.Home>() == true -> {
-                               NavigationBar {
-                                navBarItems.forEachIndexed { index, item ->
-                                    NavigationBarItem(
-                                        selected = selectedIndex == index,
-                                        onClick = {
-                                            selectedIndex = index
-                                        },
-                                        icon = {
-                                            Icon(
-                                                imageVector = item.icon,
-                                                contentDescription = item.label,
-                                                tint = if (selectedIndex == index) {
-                                                    OrangeVariant
-                                                } else {
-                                                    LocalContentColor.current
-                                                }
-                                            )
-                                        },
-                                        label = { Text(item.label) }
-                                    )
+                            currentScreen?.hasRoute<Routes.Home>() == true -> {
+                                NavigationBar {
+                                    navBarItems.forEachIndexed { index, item ->
+                                        NavigationBarItem(
+                                            selected = selectedIndex == index,
+                                            onClick = {
+                                                selectedIndex = index
+                                            },
+                                            icon = {
+                                                Icon(
+                                                    imageVector = item.icon,
+                                                    contentDescription = item.label,
+                                                    tint = if (selectedIndex == index) {
+                                                        OrangeVariant
+                                                    } else {
+                                                        LocalContentColor.current
+                                                    }
+                                                )
+                                            },
+                                            label = { Text(item.label) }
+                                        )
+                                    }
                                 }
-                                }
-                           }
+                            }
                             else -> {}
                         }
                     }
                 ) { innerPadding ->
 
-                    NavHost(navController = navController, startDestination = Routes.Splash) {
-                        composable<Routes.Splash> {
-                            SplashScreenAnimation(modifier) {
-                                navController.navigate(Routes.Home) {
-                                    popUpTo<Routes.Splash> { inclusive = true }
                     val screenModifier = Modifier.padding(innerPadding)
 
                     NavHost(
@@ -206,14 +199,6 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
-                        }
-                        composable<Routes.Home> {
-                            with(mealViewModel) {
-                                getRandomMeal()
-                                getAllCategories()
-                                getMealByCategory("Beef")
-                            }
-                            HomeScreen(mealViewModel, modifier)
 
                             composable<Routes.SignUp> {
 
@@ -273,6 +258,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-}
 }
