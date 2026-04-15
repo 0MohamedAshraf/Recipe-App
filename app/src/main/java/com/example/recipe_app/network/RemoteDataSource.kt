@@ -11,4 +11,6 @@ interface RemoteDataSource {
     suspend fun getAllCategories() : Response<CategoriesResponse>
 
     suspend fun filterByCategory(category: String) : Response<MealResponse>
+
+    suspend fun getMealById(id : String) : Response<MealResponse>
 }

@@ -31,20 +31,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.recipe_app.R
-import com.example.recipe_app.components.CategoriesRow
-import com.example.recipe_app.components.MealLazyColumn
-import com.example.recipe_app.components.MealOfTheDayCard
+import com.example.recipe_app.screens.homeScreen.components.CategoriesRow
+import com.example.recipe_app.screens.homeScreen.components.MealLazyColumn
+import com.example.recipe_app.screens.homeScreen.components.MealOfTheDayCard
 import com.example.recipe_app.components.SectionHeader
 import com.example.recipe_app.navBarItems
-import com.example.recipe_app.network.ApiClient
-import com.example.recipe_app.network.RemoteDataSourceImpl
-import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 
 @Composable
-fun HomeScreen(mealViewModel: MealViewModel, modifier: Modifier = Modifier) {
+fun HomeScreen(
+    mealViewModel: MealViewModel,
+    onMealClick : (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val randomMeal by mealViewModel.randomMeal.collectAsStateWithLifecycle()
     val categories by mealViewModel.categories.collectAsStateWithLifecycle()
     val meals by mealViewModel.categoryOfMeals.collectAsStateWithLifecycle()
@@ -102,7 +103,10 @@ fun HomeScreen(mealViewModel: MealViewModel, modifier: Modifier = Modifier) {
 
         SectionHeader(title = "Trending Meals")
         Spacer(Modifier.height(16.dp))
-        MealLazyColumn(meals)
+        MealLazyColumn(
+            meals,
+            onMealClick = onMealClick
+        )
     }
 }
 

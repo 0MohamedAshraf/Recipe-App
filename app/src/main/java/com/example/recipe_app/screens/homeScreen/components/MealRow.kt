@@ -1,4 +1,4 @@
-package com.example.recipe_app.components
+package com.example.recipe_app.screens.homeScreen.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row

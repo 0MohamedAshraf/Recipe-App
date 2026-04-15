@@ -1,4 +1,4 @@
-package com.example.recipe_app.components
+package com.example.recipe_app.screens.homeScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyRow

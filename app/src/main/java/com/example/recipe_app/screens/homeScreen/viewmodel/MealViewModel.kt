@@ -14,6 +14,11 @@ class MealViewModel(
     private val mealRepository: MealRepository
 ) : ViewModel() {
 
+    init {
+        getRandomMeal()
+        getAllCategories()
+        getMealByCategory("Beef")
+    }
     private val _randomMeal = MutableStateFlow<Meal?>(null)
     val randomMeal = _randomMeal.asStateFlow()
 
