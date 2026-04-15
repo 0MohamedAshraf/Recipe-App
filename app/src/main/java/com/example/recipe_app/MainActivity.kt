@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.recipe_app.screens.signInScreen.SignInScreen
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +48,7 @@ import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
 import com.example.recipe_app.screens.signInScreen.SignInScreen
 import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
 import com.example.recipe_app.ui.theme.OrangeVariant
+
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 import com.google.firebase.auth.FirebaseAuth
 
@@ -87,6 +89,17 @@ class MainActivity : ComponentActivity() {
                 var selectedIndex by rememberSaveable { mutableStateOf(0) }
                 var showBars by rememberSaveable { mutableStateOf(false) }
 
+                val navController = rememberNavController()
+                var inSplashScreen by rememberSaveable { mutableStateOf(true) }
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    topBar = {
+                        if (!inSplashScreen) {
+                            TopAppBar(
+                                title = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
@@ -99,6 +112,8 @@ class MainActivity : ComponentActivity() {
                                             contentDescription = "Title Icon",
                                             tint = OrangeVariant
                                         )
+
+                                        Spacer(Modifier.width(8.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = "RecipeHome",
@@ -113,10 +128,30 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier.padding(end = 8.dp)
                                     )
                                 }
+
                             )
                         }
                     },
                     bottomBar = {
+                        if (!inSplashScreen) {
+                            NavigationBar {
+                                NavBarItems.forEachIndexed { index, item ->
+                                    NavigationBarItem(
+                                        selected = selectedIndex == index,
+                                        icon = {
+                                            Icon(
+                                                imageVector = item.icon,
+                                                contentDescription = null,
+                                                tint =
+                                                    if (selectedIndex == index) OrangeVariant
+                                                    else LocalContentColor.current
+                                            )
+                                        },
+                                        label = { Text(item.label) },
+                                        onClick = {
+                                            selectedIndex = index
+                                            item.icon.tintColor
+                                        }
                         if (showBars) {
                             NavigationBar {
                                 navBarItems.forEachIndexed { index, item ->
@@ -144,6 +179,11 @@ class MainActivity : ComponentActivity() {
                     }
                 ) { innerPadding ->
 
+                    NavHost(navController = navController, startDestination = Routes.Splash) {
+                        composable<Routes.Splash> {
+                            SplashScreenAnimation(modifier) {
+                                navController.navigate(Routes.Home) {
+                                    popUpTo<Routes.Splash> { inclusive = true }
                     val screenModifier = Modifier.padding(innerPadding)
 
                     NavHost(
@@ -225,6 +265,14 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+                        }
+                        composable<Routes.Home> {
+                            with(mealViewModel) {
+                                getRandomMeal()
+                                getAllCategories()
+                                getMealByCategory("Beef")
+                            }
+                            HomeScreen(mealViewModel, modifier)
 
                             composable<Routes.SignUp> {
                                 showBars = false
@@ -260,4 +308,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+}
 }
