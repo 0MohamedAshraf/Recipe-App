@@ -17,6 +17,10 @@ lottieVersion = "6.7.1"
 nav_Version = "2.9.7"
 coil_Version = "3.4.0"
 serializationVersion = "1.7.3"
+googleGmsGoogleServices = "4.4.4"
+firebaseAuth = "24.0.1"
+youtubePlayer_version = "11.1.0"
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -46,10 +50,14 @@ navigation-compose = { group = "androidx.navigation",name = "navigation-compose"
 coil-compose = { group = "io.coil-kt.coil3",name = "coil-compose", version.ref = "coil_Version"}
 coil-network-okhttp = { group = "io.coil-kt.coil3",name = "coil-network-okhttp", version.ref = "coil_Version"}
 kotlinx-serialization = { group = "org.jetbrains.kotlinx",name = "kotlinx-serialization-json", version.ref = "serializationVersion"}
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
+youtube-player = { group = "com.pierfrancescosoffritti.androidyoutubeplayer", name = "core", version.ref = "youtubePlayer_version" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion"}
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 
 

@@ -18,4 +18,8 @@ class RemoteDataSourceImpl(
     override suspend fun filterByCategory(category: String): Response<MealResponse> {
         return apiService.filterByCategory(category)
     }
+
+    override suspend fun getMealById(id: String): Response<MealResponse> {
+        return apiService.getMealByID(id)
+    }
 }
