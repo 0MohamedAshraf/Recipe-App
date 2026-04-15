@@ -14,6 +14,8 @@ sealed interface Routes {
     data object Splash : Routes
 
     @Serializable
+    data class Details(val id : String)
+    @Serializable
     data object SignIn : Routes
 
     @Serializable

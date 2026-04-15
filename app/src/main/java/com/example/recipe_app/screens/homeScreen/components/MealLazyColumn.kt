@@ -1,4 +1,4 @@
-package com.example.recipe_app.components
+package com.example.recipe_app.screens.homeScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,7 +11,11 @@ import androidx.compose.ui.unit.dp
 import com.example.recipe_app.screens.homeScreen.dto.Meal
 
 @Composable
-fun MealLazyColumn(meals: List<Meal>, modifier: Modifier = Modifier){
+fun MealLazyColumn(
+    meals: List<Meal>,
+    onMealClick : (String) -> Unit,
+    modifier: Modifier = Modifier
+){
 
     LazyColumn(
         modifier.fillMaxWidth(),
@@ -21,7 +25,9 @@ fun MealLazyColumn(meals: List<Meal>, modifier: Modifier = Modifier){
             MealRow(
                 name = meal.strMeal,
                 image = meal.strMealThumb,
-                onMealRowClick = {}
+                onMealRowClick = {
+                    onMealClick(meal.idMeal)
+                }
             )
         }
     }
