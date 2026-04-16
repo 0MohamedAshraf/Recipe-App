@@ -45,8 +45,6 @@ fun ProfileScreen(
     joinedDate: String = "Joined April 2024",
     favoriteCount: String = "10 items saved",
     plannedMeal: String = "Next: Grilled Salmon Tonight",
-    onBackClick: () -> Unit = {},
-    onSettingsClick: () -> Unit = {},
     onFavoriteMealsClick: () -> Unit = {},
     onPlannedMealsClick: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
@@ -58,37 +56,6 @@ fun ProfileScreen(
             .background(Color(0xFFFCFAF7))
             .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.ArrowBack,
-                contentDescription = "Back",
-                tint = Color(0xFF3A3A3A),
-                modifier = Modifier.clickable { onBackClick() }
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Text(
-                text = "My Profile",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF2D2D2D)
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = "Settings",
-                tint = Color(0xFF3A3A3A),
-                modifier = Modifier.clickable { onSettingsClick() }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(28.dp))
 
         Box(
             modifier = Modifier.fillMaxWidth(),

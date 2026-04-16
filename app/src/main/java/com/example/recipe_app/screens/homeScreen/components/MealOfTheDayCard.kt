@@ -29,7 +29,12 @@ import coil3.compose.AsyncImage
 import com.example.recipe_app.ui.theme.OrangeVariant
 
 @Composable
-fun MealOfTheDayCard(title: String, image: String?, tags: String?, modifier: Modifier = Modifier){
+fun MealOfTheDayCard(
+    title: String,
+    image: String?,
+    tags: String?,
+    onViewRecipeClick: () -> Unit,
+    modifier: Modifier = Modifier){
     Card(modifier.fillMaxWidth().height(216.dp)) {
         Box(modifier = Modifier.fillMaxSize()){
             AsyncImage(
@@ -80,7 +85,7 @@ fun MealOfTheDayCard(title: String, image: String?, tags: String?, modifier: Mod
 
             }
             Button(
-                onClick = {},
+                onClick = onViewRecipeClick,
                 colors = ButtonDefaults.buttonColors(containerColor = OrangeVariant),
                 modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
             ) {

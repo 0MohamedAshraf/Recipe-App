@@ -23,4 +23,10 @@ sealed interface Routes {
 
     @Serializable
     data object Home : Routes
+
+    @Serializable
+    data class Profile(val userId: String)
+
+    @Serializable
+    data object Search
 }
