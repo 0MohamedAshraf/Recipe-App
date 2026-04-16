@@ -74,7 +74,8 @@ fun HomeScreen(
         MealOfTheDayCard(
             title = randomMeal?.strMeal ?: "Error",
             image = randomMeal?.strMealThumb,
-            tags = randomMeal?.strTags
+            tags = randomMeal?.strTags,
+            onViewRecipeClick = { onMealClick(randomMeal?.idMeal ?: "") }
         )
 
         Spacer(Modifier.height(16.dp))

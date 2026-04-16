@@ -45,11 +45,16 @@ import com.example.recipe_app.screens.homeScreen.components.HomeTopBar
 import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
+import com.example.recipe_app.screens.profileScreen.ProfileScreen
+import com.example.recipe_app.screens.profileScreen.components.ProfileTopBar
+import com.example.recipe_app.screens.profileScreen.components.SearchTopBar
+import com.example.recipe_app.screens.searchScreen.SearchScreen
 import com.example.recipe_app.screens.signInScreen.SignInScreen
 import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 import com.google.firebase.auth.FirebaseAuth
+import okhttp3.Route
 
 data class BottomNavBarItem(
     val label: String,
@@ -75,7 +80,6 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val auth = FirebaseAuth.getInstance()
 
-                var selectedIndex by rememberSaveable { mutableStateOf(0) }
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentScreen = backStackEntry?.destination
                 Scaffold(
@@ -90,19 +94,45 @@ class MainActivity : ComponentActivity() {
                                     onShareClick = {}
                                 )
                             }
+                            currentScreen?.hasRoute<Routes.Profile>() == true -> {
+                                ProfileTopBar(
+                                    onBackClick = {navController.popBackStack() },
+                                    onSettingsClick = {}
+                                )
+                            }
+                            currentScreen?.hasRoute<Routes.Search>() == true -> {
+                                SearchTopBar(
+                                    onBackClick = { navController.popBackStack() },
+                                    onMicClick = {}
+                                )
+                            }
                             else -> {}
 
                         }
                     },
                     bottomBar = {
                         when{
-                            currentScreen?.hasRoute<Routes.Home>() == true -> {
+                            currentScreen?.hasRoute<Routes.Home>() == true ||
+                            currentScreen?.hasRoute<Routes.Profile>() == true ||
+                            currentScreen?.hasRoute<Routes.Search>() == true   -> {
+                                val selectedIndex : Int = when{
+                                    currentScreen.hasRoute<Routes.Home>() -> 0
+                                    currentScreen.hasRoute<Routes.Search>() -> 1
+                                    // currentScreen.hasRoute<Routes.Favorites>() == true -> 2
+                                    currentScreen.hasRoute<Routes.Profile>() -> 3
+                                    else -> 0
+                                }
                                 NavigationBar {
                                     navBarItems.forEachIndexed { index, item ->
                                         NavigationBarItem(
                                             selected = selectedIndex == index,
                                             onClick = {
-                                                selectedIndex = index
+                                                when(index){
+                                                    0 -> navController.navigate(Routes.Home)
+                                                    1 -> navController.navigate(Routes.Search)
+//                                                    2 -> navController.navigate(Routes.Favorites)
+                                                    3 -> navController.navigate(Routes.Profile("id"))
+                                                }
                                             },
                                             icon = {
                                                 Icon(
@@ -251,6 +281,14 @@ class MainActivity : ComponentActivity() {
                                     detailsViewModel = detailsViewModel,
                                     modifier = screenModifier
                                 )
+                            }
+
+                            composable<Routes.Profile> { userId ->
+                                ProfileScreen(modifier = screenModifier)
+                            }
+
+                            composable<Routes.Search>{
+                                SearchScreen(screenModifier)
                             }
                         }
                     }
