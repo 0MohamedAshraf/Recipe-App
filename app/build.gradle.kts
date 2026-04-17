@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.room.ktx)
     implementation (libs.androidx.compose.material)
     implementation(libs.firebase.auth)
+    implementation(libs.androidx.ui.tooling.preview)
+    debugImplementation(libs.androidx.ui.tooling)
     ksp(libs.room.compiler)
     implementation(libs.glide)
     implementation(libs.activity.ktx)
@@ -76,5 +78,6 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation(libs.youtube.player)
-
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 }
