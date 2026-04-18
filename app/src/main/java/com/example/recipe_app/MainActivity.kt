@@ -79,7 +79,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-//        FirebaseAuth.getInstance().signOut()
         setContent {
             Recipe_AppTheme {
                 val navController = rememberNavController()
