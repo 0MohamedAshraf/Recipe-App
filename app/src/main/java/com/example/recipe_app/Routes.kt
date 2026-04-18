@@ -29,4 +29,6 @@ sealed interface Routes {
 
     @Serializable
     data object Search
+    @Serializable
+    data object Favorites
 }

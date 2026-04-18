@@ -40,6 +40,8 @@ import com.example.recipe_app.screens.detailsScreen.components.DetailsTopBar
 import com.example.recipe_app.screens.detailsScreen.repo.MealDetailsRepoImpl
 import com.example.recipe_app.screens.detailsScreen.viewmodel.DetailsViewModelFactory
 import com.example.recipe_app.screens.detailsScreen.viewmodel.MealDetailsViewModel
+import com.example.recipe_app.screens.favScreen.FavViewModel
+import com.example.recipe_app.screens.favScreen.FavoriteScreen
 import com.example.recipe_app.screens.homeScreen.HomeScreen
 import com.example.recipe_app.screens.homeScreen.components.HomeTopBar
 import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
@@ -55,6 +57,7 @@ import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.Route
+import kotlin.getValue
 
 data class BottomNavBarItem(
     val label: String,
@@ -118,7 +121,7 @@ class MainActivity : ComponentActivity() {
                                 val selectedIndex : Int = when{
                                     currentScreen.hasRoute<Routes.Home>() -> 0
                                     currentScreen.hasRoute<Routes.Search>() -> 1
-                                    // currentScreen.hasRoute<Routes.Favorites>() == true -> 2
+                                    currentScreen.hasRoute<Routes.Favorites>() -> 2
                                     currentScreen.hasRoute<Routes.Profile>() -> 3
                                     else -> 0
                                 }
@@ -130,7 +133,7 @@ class MainActivity : ComponentActivity() {
                                                 when(index){
                                                     0 -> navController.navigate(Routes.Home)
                                                     1 -> navController.navigate(Routes.Search)
-//                                                    2 -> navController.navigate(Routes.Favorites)
+                                                    2 -> navController.navigate(Routes.Favorites)
                                                     3 -> navController.navigate(Routes.Profile("id"))
                                                 }
                                             },
@@ -289,6 +292,12 @@ class MainActivity : ComponentActivity() {
 
                             composable<Routes.Search>{
                                 SearchScreen(screenModifier)
+                            }
+                            composable<Routes.Favorites>{
+                                val favViewModel : FavViewModel by viewModels()
+                                FavoriteScreen(
+                                    favViewModel
+                                )
                             }
                         }
                     }
