@@ -42,6 +42,8 @@ import com.example.recipe_app.screens.detailsScreen.viewmodel.DetailsViewModelFa
 import com.example.recipe_app.screens.detailsScreen.viewmodel.MealDetailsViewModel
 import com.example.recipe_app.screens.favScreen.FavViewModel
 import com.example.recipe_app.screens.favScreen.FavoriteScreen
+import com.example.recipe_app.screens.favScreen.FavoriteScreenContent
+import com.example.recipe_app.screens.favScreen.Meal
 import com.example.recipe_app.screens.homeScreen.HomeScreen
 import com.example.recipe_app.screens.homeScreen.components.HomeTopBar
 import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
@@ -77,7 +79,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
+//        FirebaseAuth.getInstance().signOut()
         setContent {
             Recipe_AppTheme {
                 val navController = rememberNavController()
@@ -117,7 +119,8 @@ class MainActivity : ComponentActivity() {
                         when{
                             currentScreen?.hasRoute<Routes.Home>() == true ||
                             currentScreen?.hasRoute<Routes.Profile>() == true ||
-                            currentScreen?.hasRoute<Routes.Search>() == true   -> {
+                            currentScreen?.hasRoute<Routes.Search>() == true ||
+                            currentScreen?.hasRoute<Routes.Favorites>() == true -> {
                                 val selectedIndex : Int = when{
                                     currentScreen.hasRoute<Routes.Home>() -> 0
                                     currentScreen.hasRoute<Routes.Search>() -> 1
@@ -294,9 +297,29 @@ class MainActivity : ComponentActivity() {
                                 SearchScreen(screenModifier)
                             }
                             composable<Routes.Favorites>{
-                                val favViewModel : FavViewModel by viewModels()
-                                FavoriteScreen(
-                                    favViewModel
+                                val fakeMeals = listOf(
+                                    Meal(
+                                        id = "1",
+                                        title = "Pizza",
+                                        category = "Italian",
+                                        area = "Italy",
+                                        imageUrl = "https://www.foodandwine.com/thmb/Wd4lBRZz3X_8qBr69UOu2m7I2iw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/classic-cheese-pizza-FT-RECIPE0422-31a2c938fc2546c9a07b7011658cfd05.jpg",
+                                        isFavorite = true
+                                    ),
+                                    Meal(
+                                        id = "2",
+                                        title = "Burger",
+                                        category = "Fast Food",
+                                        area = "USA",
+                                        imageUrl = "https://blog-content.omahasteaks.com/wp-content/uploads/2023/02/The-Mack-Burger-recipe-scaled.jpg",
+                                        isFavorite = true
+                                    )
+                                )
+
+                                FavoriteScreenContent(
+                                    meals = fakeMeals,
+                                    onRemoveClick = {},
+                                    screenModifier
                                 )
                             }
                         }
