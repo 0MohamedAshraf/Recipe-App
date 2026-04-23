@@ -40,16 +40,26 @@ import com.example.recipe_app.screens.detailsScreen.components.DetailsTopBar
 import com.example.recipe_app.screens.detailsScreen.repo.MealDetailsRepoImpl
 import com.example.recipe_app.screens.detailsScreen.viewmodel.DetailsViewModelFactory
 import com.example.recipe_app.screens.detailsScreen.viewmodel.MealDetailsViewModel
+import com.example.recipe_app.screens.favScreen.FavViewModel
+import com.example.recipe_app.screens.favScreen.FavoriteScreen
+import com.example.recipe_app.screens.favScreen.FavoriteScreenContent
+import com.example.recipe_app.screens.favScreen.Meal
 import com.example.recipe_app.screens.homeScreen.HomeScreen
 import com.example.recipe_app.screens.homeScreen.components.HomeTopBar
 import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
+import com.example.recipe_app.screens.profileScreen.ProfileScreen
+import com.example.recipe_app.screens.profileScreen.components.ProfileTopBar
+import com.example.recipe_app.screens.profileScreen.components.SearchTopBar
+import com.example.recipe_app.screens.searchScreen.SearchScreen
 import com.example.recipe_app.screens.signInScreen.SignInScreen
 import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 import com.google.firebase.auth.FirebaseAuth
+import okhttp3.Route
+import kotlin.getValue
 
 data class BottomNavBarItem(
     val label: String,
@@ -69,57 +79,82 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContent {
             Recipe_AppTheme {
                 val navController = rememberNavController()
                 val auth = FirebaseAuth.getInstance()
 
-                var selectedIndex by rememberSaveable { mutableStateOf(0) }
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentScreen = backStackEntry?.destination
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
-                            when {
-                                currentScreen?.hasRoute<Routes.Home>() == true -> HomeTopBar()
-                                currentScreen?.hasRoute<Routes.Details>() == true -> {
-                                    DetailsTopBar(
-                                        onBackClick = {navController.popBackStack()},
-                                        onFavoriteClick = {},
-                                        onShareClick = {}
-                                    )
-                                }
-                                else -> {}
-
+                        when {
+                            currentScreen?.hasRoute<Routes.Home>() == true -> HomeTopBar()
+                            currentScreen?.hasRoute<Routes.Details>() == true -> {
+                                DetailsTopBar(
+                                    onBackClick = {navController.popBackStack()},
+                                    onFavoriteClick = {},
+                                    onShareClick = {}
+                                )
                             }
+                            currentScreen?.hasRoute<Routes.Profile>() == true -> {
+                                ProfileTopBar(
+                                    onBackClick = {navController.popBackStack() },
+                                    onSettingsClick = {}
+                                )
+                            }
+                            currentScreen?.hasRoute<Routes.Search>() == true -> {
+                                SearchTopBar(
+                                    onBackClick = { navController.popBackStack() },
+                                    onMicClick = {}
+                                )
+                            }
+                            else -> {}
+
+                        }
                     },
                     bottomBar = {
                         when{
-                           currentScreen?.hasRoute<Routes.Home>() == true -> {
-                               NavigationBar {
-                                navBarItems.forEachIndexed { index, item ->
-                                    NavigationBarItem(
-                                        selected = selectedIndex == index,
-                                        onClick = {
-                                            selectedIndex = index
-                                        },
-                                        icon = {
-                                            Icon(
-                                                imageVector = item.icon,
-                                                contentDescription = item.label,
-                                                tint = if (selectedIndex == index) {
-                                                    OrangeVariant
-                                                } else {
-                                                    LocalContentColor.current
+                            currentScreen?.hasRoute<Routes.Home>() == true ||
+                            currentScreen?.hasRoute<Routes.Profile>() == true ||
+                            currentScreen?.hasRoute<Routes.Search>() == true ||
+                            currentScreen?.hasRoute<Routes.Favorites>() == true -> {
+                                val selectedIndex : Int = when{
+                                    currentScreen.hasRoute<Routes.Home>() -> 0
+                                    currentScreen.hasRoute<Routes.Search>() -> 1
+                                    currentScreen.hasRoute<Routes.Favorites>() -> 2
+                                    currentScreen.hasRoute<Routes.Profile>() -> 3
+                                    else -> 0
+                                }
+                                NavigationBar {
+                                    navBarItems.forEachIndexed { index, item ->
+                                        NavigationBarItem(
+                                            selected = selectedIndex == index,
+                                            onClick = {
+                                                when(index){
+                                                    0 -> navController.navigate(Routes.Home)
+                                                    1 -> navController.navigate(Routes.Search)
+                                                    2 -> navController.navigate(Routes.Favorites)
+                                                    3 -> navController.navigate(Routes.Profile("id"))
                                                 }
-                                            )
-                                        },
-                                        label = { Text(item.label) }
-                                    )
+                                            },
+                                            icon = {
+                                                Icon(
+                                                    imageVector = item.icon,
+                                                    contentDescription = item.label,
+                                                    tint = if (selectedIndex == index) {
+                                                        OrangeVariant
+                                                    } else {
+                                                        LocalContentColor.current
+                                                    }
+                                                )
+                                            },
+                                            label = { Text(item.label) }
+                                        )
+                                    }
                                 }
-                                }
-                           }
+                            }
                             else -> {}
                         }
                     }
@@ -250,6 +285,40 @@ class MainActivity : ComponentActivity() {
                                 DetailsScreen(
                                     detailsViewModel = detailsViewModel,
                                     modifier = screenModifier
+                                )
+                            }
+
+                            composable<Routes.Profile> { userId ->
+                                ProfileScreen(modifier = screenModifier)
+                            }
+
+                            composable<Routes.Search>{
+                                SearchScreen(screenModifier)
+                            }
+                            composable<Routes.Favorites>{
+                                val fakeMeals = listOf(
+                                    Meal(
+                                        id = "1",
+                                        title = "Pizza",
+                                        category = "Italian",
+                                        area = "Italy",
+                                        imageUrl = "https://www.foodandwine.com/thmb/Wd4lBRZz3X_8qBr69UOu2m7I2iw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/classic-cheese-pizza-FT-RECIPE0422-31a2c938fc2546c9a07b7011658cfd05.jpg",
+                                        isFavorite = true
+                                    ),
+                                    Meal(
+                                        id = "2",
+                                        title = "Burger",
+                                        category = "Fast Food",
+                                        area = "USA",
+                                        imageUrl = "https://blog-content.omahasteaks.com/wp-content/uploads/2023/02/The-Mack-Burger-recipe-scaled.jpg",
+                                        isFavorite = true
+                                    )
+                                )
+
+                                FavoriteScreenContent(
+                                    meals = fakeMeals,
+                                    onRemoveClick = {},
+                                    screenModifier
                                 )
                             }
                         }
