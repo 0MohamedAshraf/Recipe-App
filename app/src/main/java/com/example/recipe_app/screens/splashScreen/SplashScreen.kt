@@ -19,7 +19,7 @@ fun SplashScreenAnimation(
     onAnimationEnd : () -> Unit
     ) {
     val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.food_prep)
+        LottieCompositionSpec.RawRes(R.raw.boiling_pot)
     )
 
     val progress by animateLottieCompositionAsState(

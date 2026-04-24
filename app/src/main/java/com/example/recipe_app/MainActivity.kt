@@ -21,9 +21,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -36,12 +33,11 @@ import androidx.navigation.toRoute
 import com.example.recipe_app.network.ApiClient
 import com.example.recipe_app.network.RemoteDataSourceImpl
 import com.example.recipe_app.screens.detailsScreen.DetailsScreen
+import com.example.recipe_app.screens.detailsScreen.components.DetailsBottomNav
 import com.example.recipe_app.screens.detailsScreen.components.DetailsTopBar
 import com.example.recipe_app.screens.detailsScreen.repo.MealDetailsRepoImpl
 import com.example.recipe_app.screens.detailsScreen.viewmodel.DetailsViewModelFactory
 import com.example.recipe_app.screens.detailsScreen.viewmodel.MealDetailsViewModel
-import com.example.recipe_app.screens.favScreen.FavViewModel
-import com.example.recipe_app.screens.favScreen.FavoriteScreen
 import com.example.recipe_app.screens.favScreen.FavoriteScreenContent
 import com.example.recipe_app.screens.favScreen.Meal
 import com.example.recipe_app.screens.homeScreen.HomeScreen
@@ -58,8 +54,6 @@ import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 import com.google.firebase.auth.FirebaseAuth
-import okhttp3.Route
-import kotlin.getValue
 
 data class BottomNavBarItem(
     val label: String,
@@ -155,6 +149,8 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
+                            currentScreen?.hasRoute<Routes.Details>() == true ->
+                                NavigationBar{DetailsBottomNav({})}
                             else -> {}
                         }
                     }
