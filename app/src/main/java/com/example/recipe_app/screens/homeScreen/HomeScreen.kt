@@ -50,7 +50,7 @@ fun HomeScreen(
     val categories by mealViewModel.categories.collectAsStateWithLifecycle()
     val meals by mealViewModel.categoryOfMeals.collectAsStateWithLifecycle()
 
-    Column(modifier.padding(horizontal = 8.dp)) {
+    Column(modifier.padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(8.dp))
 
         Row {
@@ -80,18 +80,8 @@ fun HomeScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            SectionHeader(title = "Category")
+        SectionHeader(title = "Category")
 
-            Text(
-                text = "See All",
-                color = OrangeVariant,
-                textAlign = TextAlign.End
-            )
-        }
 
         Spacer(Modifier.height(16.dp))
 

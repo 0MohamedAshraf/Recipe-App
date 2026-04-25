@@ -19,7 +19,7 @@ fun MealLazyColumn(
 
     LazyColumn(
         modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(32.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(items = meals){ meal ->
             MealRow(

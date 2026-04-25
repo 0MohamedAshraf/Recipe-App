@@ -77,7 +77,5 @@ dependencies {
     implementation(libs.kotlinx.serialization)
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
     implementation("com.google.firebase:firebase-auth")
-    implementation(libs.youtube.player)
-    implementation("io.coil-kt:coil-compose:2.6.0")
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation(libs.youtube.player.core)
 }

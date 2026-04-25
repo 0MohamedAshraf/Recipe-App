@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.example.recipe_app.R
 import com.example.recipe_app.ui.theme.OrangeVariant
 
 @Composable
@@ -35,12 +38,18 @@ fun MealOfTheDayCard(
     tags: String?,
     onViewRecipeClick: () -> Unit,
     modifier: Modifier = Modifier){
-    Card(modifier.fillMaxWidth().height(216.dp)) {
+    Card(
+        onClick = onViewRecipeClick,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 16.dp, pressedElevation = 2.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(216.dp)) {
         Box(modifier = Modifier.fillMaxSize()){
             AsyncImage(
                 model = image,
                 contentDescription = null,
-                contentScale = ContentScale.FillBounds,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
             Box(
@@ -69,6 +78,15 @@ fun MealOfTheDayCard(
                     color = Color.White,
                     fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
+
+
+            }
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp)
+                    .fillMaxWidth(0.6f)
+            ) {
                 Text(
                     text = title,
                     color = Color.White,
@@ -82,15 +100,8 @@ fun MealOfTheDayCard(
                         color = Color.LightGray
                     )
                 }
+            }
 
-            }
-            Button(
-                onClick = onViewRecipeClick,
-                colors = ButtonDefaults.buttonColors(containerColor = OrangeVariant),
-                modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
-            ) {
-                Text(text = "View Recipe")
-            }
 
         }
     }
@@ -100,7 +111,8 @@ fun MealOfTheDayCard(
 fun MealOfTheDayCardPreview(){
 //    MealOfTheDayCard(
 //        title = "Lemon Herb Roasted Chicken",
-//        image = painterResource(R.drawable.roasted_chicken),
-//        tags = listOf("Chicken","Lunch")
+//        image = R.drawable.temp,
+//        tags = "Chicken,Lunch",
+//        onViewRecipeClick = {}
 //    )
 }

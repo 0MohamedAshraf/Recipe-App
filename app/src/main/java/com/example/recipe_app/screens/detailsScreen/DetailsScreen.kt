@@ -1,11 +1,13 @@
 package com.example.recipe_app.screens.detailsScreen
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,10 +18,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.recipe_app.components.SectionHeader
 import com.example.recipe_app.screens.detailsScreen.components.IngredientsGrid
+import com.example.recipe_app.screens.detailsScreen.components.InstructionCard
 import com.example.recipe_app.screens.detailsScreen.components.MealImage
 import com.example.recipe_app.screens.detailsScreen.components.YoutubeScreen
+import com.example.recipe_app.screens.detailsScreen.dto.RecipeIngredient
 import com.example.recipe_app.screens.detailsScreen.dto.getIngredients
 import com.example.recipe_app.screens.detailsScreen.viewmodel.MealDetailsViewModel
+import com.example.recipe_app.screens.homeScreen.dto.Meal
 import com.example.recipe_app.ui.theme.OrangeVariant
 
 @Composable
@@ -29,53 +34,87 @@ fun DetailsScreen(
 ) {
     val meal by detailsViewModel.meal.collectAsStateWithLifecycle()
     val ingredients = meal?.getIngredients()
-    LazyColumn(
+
+    DetailsContent(
+        meal = meal,
+        ingredients = ingredients,
+        modifier = modifier
+    )
+}
+@Composable
+fun DetailsContent(
+    meal: Meal?,
+    ingredients: List<RecipeIngredient>?,
+    modifier: Modifier = Modifier
+) {
+    Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
-        item {
-            MealImage(
-                image = meal?.strMealThumb ?:"",
-                mealName = meal?.strMeal ?:"",
-                area = meal?.strArea ?:"",
-                category = meal?.strCategory ?:"",
+
+        MealImage(
+            image = meal?.strMealThumb ?: "",
+            mealName = meal?.strMeal ?: "",
+            area = meal?.strArea ?: "",
+            category = meal?.strCategory ?: "",
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            if (ingredients != null) {
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        SectionHeader("Ingredients")
+                        Text(
+
+                            text = "${ingredients.size} items",
+                            color = OrangeVariant
+                        )
+                    }
+
+                 IngredientsGrid(ingredients)
+            }
+
+
+            SectionHeader("Video Tutorial")
+
+
+            if (meal?.strYoutube != null)
+                YoutubeScreen(meal.strYoutube)
+
+
+            SectionHeader("Preparation")
+
+            InstructionCard(
+                instructions = meal?.strInstructions ?: ""
             )
         }
-        if(ingredients != null){
-        item{
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-            ) {
-                SectionHeader("Ingredients")
-                Text(
-                    text = "${ingredients.size.toString()} items",
-                    color = OrangeVariant
-                )
-            }
-        }
-        item {  IngredientsGrid(ingredients) }
-        }
 
-        item {
-            SectionHeader("Video Tutorial", Modifier.padding(start = 8.dp))
-            YoutubeScreen("M7lc1UVf-VE")
-        }
-
-    }
 
 
 
+    }
 }
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun DetailsScreenPreview(){
+
 //    Scaffold {
-//        DetailsScreen("",modifier = Modifier.padding(it))
+//        DetailsContent(
+//            meal = previewMeal,
+//            ingredients = null,
+//            modifier = Modifier.padding(it))
 //    }
 }

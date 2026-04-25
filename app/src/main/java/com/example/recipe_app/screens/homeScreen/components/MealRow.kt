@@ -33,9 +33,14 @@ fun MealRow(
     onMealRowClick: () -> Unit,
     modifier: Modifier = Modifier
 ){
-    Card(modifier = modifier
+    Card(
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp,
+            pressedElevation = 2.dp
+        ),
+        modifier = modifier
         .fillMaxWidth()
-        .padding(horizontal = 16.dp)
+        .padding(horizontal = 4.dp)
         .clickable(onClick = onMealRowClick)
         .size(width = 358.dp, height = 122.dp),
         colors = CardDefaults.cardColors(
