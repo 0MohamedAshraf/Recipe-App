@@ -97,15 +97,13 @@ fun SignInScreen(
 
     LaunchedEffect(Unit) {
         val currentUser = auth.currentUser
-        if (currentUser != null) {
-            currentUser.reload().addOnCompleteListener {
-                val updatedUser = auth.currentUser
+        currentUser?.reload()?.addOnCompleteListener {
+            val updatedUser = auth.currentUser
 
-                if (updatedUser != null && updatedUser.isEmailVerified) {
-                    onLogin()
-                } else {
-                    auth.signOut()
-                }
+            if (updatedUser != null && updatedUser.isEmailVerified) {
+                onLogin()
+            } else {
+                auth.signOut()
             }
         }
     }
