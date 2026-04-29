@@ -1,8 +1,8 @@
 package com.example.recipe_app.screens.profileScreen.components
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Spacer
+
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,7 +37,7 @@ fun ProfileTopBar(
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    imageVector = Icons.Outlined.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                     contentDescription = "Back",
                     tint = Color(0xFF3A3A3A),
                 )
