@@ -22,7 +22,10 @@ class MealDetailsViewModel(
             if(response.isSuccessful){
                 _meal.value = response.body()?.meals?.get(0)
                 Log.d("abc --> ", "details view model: {${_meal.value?.idMeal}}")
-            }else Log.d("abc --> ", "getMealById: didn't find meal")
+            }else{
+                Log.d("abc --> ", "getMealById: didn't find meal")
+                Log.d("abc --> ", "getMealById: ${response.errorBody()}")
+            }
         }
     }
 

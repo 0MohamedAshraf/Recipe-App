@@ -20,6 +20,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,10 +51,17 @@ import com.example.recipe_app.screens.profileScreen.components.ProfileTopBar
 import com.example.recipe_app.screens.profileScreen.components.SearchTopBar
 import com.example.recipe_app.screens.searchScreen.SearchScreen
 import com.example.recipe_app.screens.signInScreen.SignInScreen
-import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
+import com.example.recipe_app.screens.signInScreen.viewmodel.SignInViewModel
+import com.example.recipe_app.screens.signInScreen.viewmodel.SignInViewModelFactory
+import com.example.recipe_app.screens.splashScreen.SplashScreen
+import com.example.recipe_app.screens.splashScreen.viewmodel.SplashViewModel
+import com.example.recipe_app.screens.splashScreen.viewmodel.SplashViewModelFactory
+import com.example.recipe_app.service.AccountServiceImpl
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 
 data class BottomNavBarItem(
     val label: String,
@@ -76,8 +84,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             Recipe_AppTheme {
                 val navController = rememberNavController()
-                val auth = FirebaseAuth.getInstance()
-
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentScreen = backStackEntry?.destination
                 Scaffold(
@@ -164,55 +170,47 @@ class MainActivity : ComponentActivity() {
                     ) {
 
                         composable<Routes.Splash> {
-
-                            SplashScreenAnimation(
+                            val splashViewModel : SplashViewModel by viewModels {
+                                SplashViewModelFactory(
+                                    service = AccountServiceImpl()
+                                )
+                            }
+                            SplashScreen(
                                 modifier = screenModifier,
-                                onAnimationEnd = {
-                                    val currentUser = auth.currentUser
-
-                                    if (currentUser != null) {
-                                        currentUser.reload().addOnCompleteListener {
-                                            val updatedUser = auth.currentUser
-
-                                            if (updatedUser != null && updatedUser.isEmailVerified) {
-                                                navController.navigate(route = MainGraph) {
-                                                    popUpTo<Routes.Splash> {
-                                                        inclusive = true
-                                                    }
-                                                    launchSingleTop = true
-                                                }
-                                            } else {
-                                                auth.signOut()
-                                                navController.navigate(route = AuthGraph) {
-                                                    popUpTo<Routes.Splash> {
-                                                        inclusive = true
-                                                    }
-                                                    launchSingleTop = true
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        navController.navigate(route = AuthGraph) {
-                                            popUpTo<Routes.Splash> {
-                                                inclusive = true
-                                            }
-                                            launchSingleTop = true
-                                        }
+                                splashViewModel = splashViewModel,
+                                navigateToMain = {
+                                    navController.navigate(route = MainGraph) {
+                                        popUpTo<Routes.Splash> { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                },
+                                navigateToAuth = {
+                                    navController.navigate(route = AuthGraph) {
+                                        popUpTo<Routes.Splash> { inclusive = true }
+                                        launchSingleTop = true
                                     }
                                 }
                             )
+
                         }
 
                         navigation<AuthGraph>(startDestination = Routes.SignIn) {
 
                             composable<Routes.SignIn> {
 
+                                val signInViewModel : SignInViewModel by viewModels {
+                                    SignInViewModelFactory(
+                                        service = AccountServiceImpl()
+                                    )
+
+                                }
                                 SignInScreen(
                                     modifier = screenModifier,
                                     onSignUp = {
                                         navController.navigate(route = Routes.SignUp)
                                     },
                                     onLogin = {
+                                        Log.d("abc -> ", "User: ${Firebase.auth.currentUser?.displayName}")
                                         navController.navigate(route = MainGraph) {
                                             popUpTo<AuthGraph> {
                                                 inclusive = true
@@ -220,14 +218,7 @@ class MainActivity : ComponentActivity() {
                                             launchSingleTop = true
                                         }
                                     },
-                                    onContinueAsGuest = {
-                                        navController.navigate(route = MainGraph) {
-                                            popUpTo<AuthGraph> {
-                                                inclusive = true
-                                            }
-                                            launchSingleTop = true
-                                        }
-                                    }
+                                    signInViewModel = signInViewModel
                                 )
                             }
 
@@ -277,7 +268,9 @@ class MainActivity : ComponentActivity() {
                                         )
                                     )
                                 }
-                                detailsViewModel.getMealById(mealId)
+                                LaunchedEffect(mealId) {
+                                    detailsViewModel.getMealById(mealId)
+                                }
                                 DetailsScreen(
                                     detailsViewModel = detailsViewModel,
                                     modifier = screenModifier
@@ -285,37 +278,24 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable<Routes.Profile> { userId ->
-                                ProfileScreen(modifier = screenModifier)
+                                ProfileScreen(
+                                    modifier = screenModifier,
+                                    onLogoutClick = {
+                                        Firebase.auth.signOut()
+                                        navController.navigate(AuthGraph){
+                                            popUpTo<MainGraph>{
+                                                inclusive = true
+                                            }
+                                        }
+                                    }
+                                )
                             }
 
                             composable<Routes.Search>{
                                 SearchScreen(screenModifier)
                             }
                             composable<Routes.Favorites>{
-                                val fakeMeals = listOf(
-                                    Meal(
-                                        id = "1",
-                                        title = "Pizza",
-                                        category = "Italian",
-                                        area = "Italy",
-                                        imageUrl = "https://www.foodandwine.com/thmb/Wd4lBRZz3X_8qBr69UOu2m7I2iw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/classic-cheese-pizza-FT-RECIPE0422-31a2c938fc2546c9a07b7011658cfd05.jpg",
-                                        isFavorite = true
-                                    ),
-                                    Meal(
-                                        id = "2",
-                                        title = "Burger",
-                                        category = "Fast Food",
-                                        area = "USA",
-                                        imageUrl = "https://blog-content.omahasteaks.com/wp-content/uploads/2023/02/The-Mack-Burger-recipe-scaled.jpg",
-                                        isFavorite = true
-                                    )
-                                )
 
-                                FavoriteScreenContent(
-                                    meals = fakeMeals,
-                                    onRemoveClick = {},
-                                    screenModifier
-                                )
                             }
                         }
                     }

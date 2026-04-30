@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.recipe_app.components.CustomLoadingIndicator
 import com.example.recipe_app.components.SectionHeader
 import com.example.recipe_app.screens.detailsScreen.components.IngredientsGrid
 import com.example.recipe_app.screens.detailsScreen.components.InstructionCard
@@ -35,11 +36,13 @@ fun DetailsScreen(
     val meal by detailsViewModel.meal.collectAsStateWithLifecycle()
     val ingredients = meal?.getIngredients()
 
+
     DetailsContent(
         meal = meal,
         ingredients = ingredients,
         modifier = modifier
     )
+
 }
 @Composable
 fun DetailsContent(

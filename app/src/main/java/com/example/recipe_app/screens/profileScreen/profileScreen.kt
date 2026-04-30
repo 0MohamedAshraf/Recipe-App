@@ -12,16 +12,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +55,7 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(Color(0xFFFCFAF7))
             .padding(horizontal = 20.dp, vertical = 16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
 
         Box(

@@ -72,7 +72,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         MealOfTheDayCard(
-            title = randomMeal?.strMeal ?: "Error",
+            title = randomMeal?.strMeal ?: "",
             image = randomMeal?.strMealThumb,
             tags = randomMeal?.strTags,
             onViewRecipeClick = { onMealClick(randomMeal?.idMeal ?: "") }

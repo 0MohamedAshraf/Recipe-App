@@ -1,5 +1,6 @@
 package com.example.recipe_app.screens.signInScreen
 
+import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -41,9 +42,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.recipe_app.R
+import com.example.recipe_app.screens.signInScreen.viewmodel.SignInViewModel
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 fun isValidLoginEmail(email: String): Boolean {
     return Patterns.EMAIL_ADDRESS.matcher(email).matches()
@@ -55,31 +65,20 @@ fun SignInScreen(
     modifier: Modifier = Modifier,
     onSignUp: () -> Unit = {},
     onLogin: () -> Unit = {},
-    onContinueAsGuest: () -> Unit = {}
+    signInViewModel: SignInViewModel
 ) {
     val context = LocalContext.current
-    val auth = remember { FirebaseAuth.getInstance() }
+    val coroutineScope = rememberCoroutineScope()
+    val webClientId = "997963959679-vf19obiqj62ihri998aqgtl3q7ecc9mo.apps.googleusercontent.com"
 
-    var userEmailAddress by rememberSaveable { mutableStateOf("") }
-    var userPassword by rememberSaveable { mutableStateOf("") }
+
+    val userEmailAddress by signInViewModel.email.collectAsStateWithLifecycle()
+    val userPassword by signInViewModel.password.collectAsStateWithLifecycle()
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+    val isLoading by signInViewModel.isLoading.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            currentUser.reload().addOnCompleteListener {
-                val updatedUser = auth.currentUser
 
-                if (updatedUser != null && updatedUser.isEmailVerified) {
-                    onLogin()
-                } else {
-                    auth.signOut()
-                }
-            }
-        }
-    }
 
     Column(
         modifier = modifier.fillMaxSize()
@@ -140,7 +139,7 @@ fun SignInScreen(
             OutlinedTextField(
                 value = userEmailAddress,
                 onValueChange = {
-                    userEmailAddress = it
+                    signInViewModel.updateEmail(it)
                     emailError = false
                 },
                 placeholder = { Text("Enter your email") },
@@ -162,7 +161,7 @@ fun SignInScreen(
 
             OutlinedTextField(
                 value = userPassword,
-                onValueChange = { userPassword = it },
+                onValueChange = { signInViewModel.updatePassword(it)},
                 placeholder = { Text("Enter your password") },
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = "Password Icon")
@@ -193,87 +192,18 @@ fun SignInScreen(
 
             Button(
                 onClick = {
-                    when {
-                        userEmailAddress.isBlank() || userPassword.isBlank() -> {
-                            Toast.makeText(
-                                context,
-                                "Please enter email and password",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-
-                        !isValidLoginEmail(userEmailAddress.trim()) -> {
-                            emailError = true
-                            Toast.makeText(
-                                context,
-                                "Invalid email address",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-
-                        userPassword.length < 6 -> {
-                            Toast.makeText(
-                                context,
-                                "Password must be at least 6 characters",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-
-                        else -> {
-                            isLoading = true
-
-                            auth.signInWithEmailAndPassword(
-                                userEmailAddress.trim(),
-                                userPassword
-                            ).addOnCompleteListener { task ->
-
-                                if (task.isSuccessful) {
-                                    val user = auth.currentUser
-
-                                    user?.reload()?.addOnCompleteListener { reloadTask ->
-                                        isLoading = false
-
-                                        if (reloadTask.isSuccessful) {
-                                            val updatedUser = auth.currentUser
-
-                                            if (updatedUser != null && updatedUser.isEmailVerified) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Login successful",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                                onLogin()
-                                            } else {
-                                                auth.signOut()
-
-                                                Toast.makeText(
-                                                    context,
-                                                    "Please verify your email first",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                            }
-                                        } else {
-                                            auth.signOut()
-
-                                            Toast.makeText(
-                                                context,
-                                                "Failed to refresh verification status",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
-                                    }
-                                } else {
-                                    isLoading = false
-
-                                    Toast.makeText(
-                                        context,
-                                        task.exception?.localizedMessage ?: "Authentication failed",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        }
+                    if(!isValidLoginEmail(email = userEmailAddress)){
+                        emailError = true
+                        Toast.makeText(context, "Invalid Email", Toast.LENGTH_SHORT).show()
+                        return@Button
                     }
+                    emailError = false
+                    signInViewModel.authUserEmail(
+                        onSignIn = onLogin,
+                        onError = { error ->
+                            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                        }
+                    )
                 },
                 enabled = !isLoading,
                 modifier = Modifier
@@ -313,11 +243,52 @@ fun SignInScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clickable {
-                            Toast.makeText(
-                                context,
-                                "Google sign in not added yet",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            coroutineScope.launch {
+                                try {
+                                    val credentialManager = CredentialManager.create(context)
+
+                                    val googleIdOption = GetGoogleIdOption.Builder()
+                                        .setFilterByAuthorizedAccounts(false)
+                                        .setServerClientId(webClientId)
+                                        .setAutoSelectEnabled(true)
+                                        .build()
+
+                                    val request = GetCredentialRequest.Builder()
+                                        .addCredentialOption(googleIdOption)
+                                        .build()
+
+                                    val result = credentialManager.getCredential(context, request)
+                                    val credential = result.credential
+
+                                    if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                                        val googleIdTokenCredential =
+                                            GoogleIdTokenCredential.createFrom(credential.data)
+
+                                        signInViewModel.authWithGoogle(
+                                            idToken = googleIdTokenCredential.idToken,
+                                            onSignIn = { onLogin() },
+                                            onError = { errorMessage ->
+                                                Toast.makeText(
+                                                    context,
+                                                    errorMessage,
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            }
+                                        )
+                                    }
+                                } catch (e: GetCredentialException) {
+                                    // The user swiped the popup away or canceled it
+                                    Log.d("abc --> ", "SignInScreen: ${e.localizedMessage}")
+                                    Toast.makeText(context, "Sign-in canceled", Toast.LENGTH_SHORT)
+                                        .show()
+                                } catch (e: Exception) {
+                                    Toast.makeText(
+                                        context,
+                                        "Error: ${e.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
                         },
                     tint = Color.Unspecified
                 )
@@ -328,11 +299,7 @@ fun SignInScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clickable {
-                            Toast.makeText(
-                                context,
-                                "Facebook sign in not added yet",
-                                Toast.LENGTH_SHORT
-                            ).show()
+
                         },
                     tint = Color.Unspecified
                 )
@@ -343,11 +310,7 @@ fun SignInScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clickable {
-                            Toast.makeText(
-                                context,
-                                "X sign in not added yet",
-                                Toast.LENGTH_SHORT
-                            ).show()
+
                         },
                     tint = Color.Unspecified
                 )
@@ -363,7 +326,9 @@ fun SignInScreen(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .clickable {
-                        onContinueAsGuest()
+                        signInViewModel.continueAsGuest {
+                            onLogin()
+                        }
                     }
             )
 
@@ -393,6 +358,6 @@ fun SignInScreen(
 @Composable
 fun SignInScreenPreview() {
     Recipe_AppTheme {
-        SignInScreen()
+//        SignInScreen()
     }
 }
