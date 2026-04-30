@@ -1,4 +1,4 @@
-package com.example.recipe_app
+package com.example.recipe_app.screens.signUpScreen
 
 import android.util.Log
 import android.util.Patterns
@@ -9,7 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -90,7 +90,7 @@ fun SignUpScreen(
 
         Box(modifier = Modifier.fillMaxWidth()) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Back",
                 tint = mainOrange,
                 modifier = Modifier
@@ -367,7 +367,7 @@ fun SignUpScreen(
                                             if (verifyTask.isSuccessful) {
                                                 Log.d(
                                                     "SignUpDebug",
-                                                    "User created and verification sent: uid=${user?.uid}, email=${user?.email}"
+                                                    "User created and verification sent: uid=${user.uid}, email=${user.email}"
                                                 )
 
                                                 Toast.makeText(

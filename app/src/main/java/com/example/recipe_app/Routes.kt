@@ -31,4 +31,12 @@ sealed interface Routes {
     data object Search
     @Serializable
     data object Favorites
+    @Serializable
+    data object SearchResult : Routes
+
+    @Serializable
+    data class MealsList(
+        val filterType: String,
+        val filterValue: String
+    ) : Routes
 }
