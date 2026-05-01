@@ -24,6 +24,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -31,6 +34,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.recipe_app.database.db.FavoriteDatabase
 import com.example.recipe_app.network.ApiClient
 import com.example.recipe_app.network.RemoteDataSourceImpl
 import com.example.recipe_app.screens.detailsScreen.DetailsScreen
@@ -39,8 +43,9 @@ import com.example.recipe_app.screens.detailsScreen.components.DetailsTopBar
 import com.example.recipe_app.screens.detailsScreen.repo.MealDetailsRepoImpl
 import com.example.recipe_app.screens.detailsScreen.viewmodel.DetailsViewModelFactory
 import com.example.recipe_app.screens.detailsScreen.viewmodel.MealDetailsViewModel
-import com.example.recipe_app.screens.favScreen.FavoriteScreenContent
-import com.example.recipe_app.screens.favScreen.Meal
+import com.example.recipe_app.screens.favScreen.FavoriteScreen
+import com.example.recipe_app.screens.favScreen.viewmodel.FavoriteViewModel
+import com.example.recipe_app.screens.favScreen.viewmodel.FavoriteViewModelFactory
 import com.example.recipe_app.screens.homeScreen.HomeScreen
 import com.example.recipe_app.screens.homeScreen.components.HomeTopBar
 import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
@@ -48,11 +53,12 @@ import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
 import com.example.recipe_app.screens.profileScreen.ProfileScreen
 import com.example.recipe_app.screens.profileScreen.components.ProfileTopBar
-import com.example.recipe_app.screens.profileScreen.components.SearchTopBar
 import com.example.recipe_app.screens.searchScreen.SearchScreen
+import com.example.recipe_app.screens.searchScreen.components.SearchTopBar
 import com.example.recipe_app.screens.signInScreen.SignInScreen
 import com.example.recipe_app.screens.signInScreen.viewmodel.SignInViewModel
 import com.example.recipe_app.screens.signInScreen.viewmodel.SignInViewModelFactory
+import com.example.recipe_app.screens.signUpScreen.SignUpScreen
 import com.example.recipe_app.screens.splashScreen.SplashScreen
 import com.example.recipe_app.screens.splashScreen.viewmodel.SplashViewModel
 import com.example.recipe_app.screens.splashScreen.viewmodel.SplashViewModelFactory
@@ -60,7 +66,6 @@ import com.example.recipe_app.service.AccountServiceImpl
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 
 data class BottomNavBarItem(
@@ -77,6 +82,33 @@ val navBarItems = listOf(
 
 class MainActivity : ComponentActivity() {
 
+    val mealViewModel: MealViewModel by viewModels {
+        MealViewModelFactory(
+            repository = MealRepositoryImpl(
+                remoteDataSource = RemoteDataSourceImpl(
+                    apiService = ApiClient.service
+                )
+            )
+        )
+    }
+    val favViewModel : FavoriteViewModel by viewModels {
+        FavoriteViewModelFactory(
+            favoriteDao = FavoriteDatabase.getInstance(this).favoriteDao(),
+            accountService = AccountServiceImpl()
+        )
+    }
+    val detailsViewModel : MealDetailsViewModel by viewModels {
+        DetailsViewModelFactory(
+            detailsRepo = MealDetailsRepoImpl(
+                remoteDataSource = RemoteDataSourceImpl(
+                    apiService = ApiClient.service
+                )
+            ),
+            favoriteDao = FavoriteDatabase.getInstance(this).favoriteDao(),
+            accountService = AccountServiceImpl()
+        )
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,6 +118,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentScreen = backStackEntry?.destination
+                val isFav by detailsViewModel.isFavorite.collectAsStateWithLifecycle()
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
@@ -94,8 +127,15 @@ class MainActivity : ComponentActivity() {
                             currentScreen?.hasRoute<Routes.Details>() == true -> {
                                 DetailsTopBar(
                                     onBackClick = {navController.popBackStack()},
-                                    onFavoriteClick = {},
-                                    onShareClick = {}
+                                    onFavoriteClick = {
+                                        if(isFav){
+                                            detailsViewModel.removeFromFavorites()
+                                        }else{
+                                        detailsViewModel.addToFavorites()
+                                        }
+                                    },
+                                    onShareClick = {},
+                                    isFavorite = isFav
                                 )
                             }
                             currentScreen?.hasRoute<Routes.Profile>() == true -> {
@@ -170,11 +210,11 @@ class MainActivity : ComponentActivity() {
                     ) {
 
                         composable<Routes.Splash> {
-                            val splashViewModel : SplashViewModel by viewModels {
-                                SplashViewModelFactory(
+                            val splashViewModel : SplashViewModel = viewModel(
+                                factory = SplashViewModelFactory(
                                     service = AccountServiceImpl()
                                 )
-                            }
+                            )
                             SplashScreen(
                                 modifier = screenModifier,
                                 splashViewModel = splashViewModel,
@@ -198,12 +238,13 @@ class MainActivity : ComponentActivity() {
 
                             composable<Routes.SignIn> {
 
-                                val signInViewModel : SignInViewModel by viewModels {
-                                    SignInViewModelFactory(
+                                val signInViewModel : SignInViewModel = viewModel(
+                                    factory = SignInViewModelFactory(
                                         service = AccountServiceImpl()
                                     )
+                                )
 
-                                }
+
                                 SignInScreen(
                                     modifier = screenModifier,
                                     onSignUp = {
@@ -236,15 +277,9 @@ class MainActivity : ComponentActivity() {
                         navigation<MainGraph>(startDestination = Routes.Home) {
 
                             composable<Routes.Home> {
-                                val mealViewModel: MealViewModel by viewModels {
-                                    MealViewModelFactory(
-                                        repository = MealRepositoryImpl(
-                                            remoteDataSource = RemoteDataSourceImpl(
-                                                apiService = ApiClient.service
-                                            )
-                                        )
-                                    )
-                                }
+
+                                mealViewModel.getMealByCategory("Beef")
+
                                 HomeScreen(
                                     mealViewModel = mealViewModel,
                                     modifier = screenModifier,
@@ -259,15 +294,7 @@ class MainActivity : ComponentActivity() {
                                 val mealId = backStackEntry.toRoute<Routes.Details>().id
                                 Log.d("abc --> ", "Details: {$mealId}")
 
-                                val detailsViewModel : MealDetailsViewModel by viewModels {
-                                    DetailsViewModelFactory(
-                                        detailsRepo = MealDetailsRepoImpl(
-                                            remoteDataSource = RemoteDataSourceImpl(
-                                                apiService = ApiClient.service
-                                            )
-                                        )
-                                    )
-                                }
+
                                 LaunchedEffect(mealId) {
                                     detailsViewModel.getMealById(mealId)
                                 }
@@ -296,6 +323,13 @@ class MainActivity : ComponentActivity() {
                             }
                             composable<Routes.Favorites>{
 
+
+                                favViewModel.getAllFavorites()
+
+                                FavoriteScreen(
+                                    favViewModel,
+                                    modifier = screenModifier
+                                )
                             }
                         }
                     }

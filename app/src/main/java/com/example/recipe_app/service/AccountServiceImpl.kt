@@ -20,7 +20,7 @@ class AccountServiceImpl : AccountService {
             awaitClose { Firebase.auth.removeAuthStateListener(listener) }
         }
 
-    val currentUserId : String
+    override val currentUserId : String
         get() = Firebase.auth.currentUser?.uid.orEmpty()
 
     override suspend fun signInWithEmail(email: String, password: String) {

@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface AccountService {
     val currentUser : Flow<FirebaseUser?>
+
+    val currentUserId : String
     suspend fun signInWithEmail(email: String, password: String)
     suspend fun signInWithGoogle(idToken: String)
     suspend fun signUp(email: String, password: String)

@@ -16,8 +16,8 @@ import com.example.recipe_app.screens.homeScreen.dto.Category
 
 @Composable
 fun CategoriesRow(
-    mealViewModel: MealViewModel,
     categories: List<Category>,
+    onCategorySelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var categorySelected by rememberSaveable { mutableStateOf(0) }
@@ -31,7 +31,7 @@ fun CategoriesRow(
                 selected = categorySelected == index,
                 onItemClick = {
                     categorySelected = index
-                    mealViewModel.getMealByCategory(category.strCategory)
+                    onCategorySelect(category.strCategory)
                 }
             )
         }

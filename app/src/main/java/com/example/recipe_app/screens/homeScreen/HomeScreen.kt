@@ -36,6 +36,8 @@ import com.example.recipe_app.screens.homeScreen.components.MealLazyColumn
 import com.example.recipe_app.screens.homeScreen.components.MealOfTheDayCard
 import com.example.recipe_app.components.SectionHeader
 import com.example.recipe_app.navBarItems
+import com.example.recipe_app.screens.homeScreen.dto.Category
+import com.example.recipe_app.screens.homeScreen.dto.Meal
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
@@ -50,6 +52,29 @@ fun HomeScreen(
     val categories by mealViewModel.categories.collectAsStateWithLifecycle()
     val meals by mealViewModel.categoryOfMeals.collectAsStateWithLifecycle()
 
+
+    HomeScreenContent(
+        randomMeal = randomMeal,
+        categories = categories,
+        meals = meals,
+        onMealClick = onMealClick,
+        onCategorySelect = { categoryName ->
+            mealViewModel.getMealByCategory(categoryName)
+        },
+        modifier = modifier
+    )
+}
+
+
+@Composable
+fun HomeScreenContent(
+    randomMeal: Meal?,
+    categories: List<Category>,
+    meals: List<Meal>,
+    onMealClick: (String) -> Unit,
+    onCategorySelect: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(modifier.padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(8.dp))
 
@@ -82,20 +107,20 @@ fun HomeScreen(
 
         SectionHeader(title = "Category")
 
-
         Spacer(Modifier.height(16.dp))
 
         CategoriesRow(
-            mealViewModel = mealViewModel,
-            categories = categories
+            categories = categories,
+            onCategorySelect = onCategorySelect
         )
 
         Spacer(Modifier.height(16.dp))
 
         SectionHeader(title = "Trending Meals")
         Spacer(Modifier.height(16.dp))
+
         MealLazyColumn(
-            meals,
+            meals = meals,
             onMealClick = onMealClick
         )
     }

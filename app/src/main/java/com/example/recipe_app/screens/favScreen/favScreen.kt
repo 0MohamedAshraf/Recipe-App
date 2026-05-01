@@ -1,5 +1,6 @@
 package com.example.recipe_app.screens.favScreen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -44,63 +45,59 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.example.recipe_app.database.entity.Favorite
+import com.example.recipe_app.screens.favScreen.viewmodel.FavoriteViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-data class Meal(
-    val id: String,
-    val title: String,
-    val category: String,
-    val area: String,
-    val imageUrl: String,
-    val isFavorite: Boolean
-)
-
-class FavViewModel : ViewModel() {
-
-    private val _favorites = MutableStateFlow<List<Meal>>(emptyList())
-    val favorites: StateFlow<List<Meal>> = _favorites
-
-    fun loadFavorites(meals: List<Meal>) {
-        _favorites.value = meals.filter { it.isFavorite }
-    }
-
-    fun removeFromFavorites(meal: Meal) {
-        _favorites.value = _favorites.value.filter { it.id != meal.id }
-    }
-}
 
 @Composable
 fun FavoriteScreen(
-    viewModel: FavViewModel
+    viewModel: FavoriteViewModel,
+    modifier: Modifier = Modifier
 ) {
-    val meals by viewModel.favorites.collectAsState()
-    var selectedMeal by remember { mutableStateOf<Meal?>(null) }
-
+    val favMeals by viewModel.favoriteMeals.collectAsStateWithLifecycle()
+    var showDialog by remember { mutableStateOf(false) }
+    // State to track which meal ID to delete
+    var selectedMealId by remember { mutableStateOf<String?>(null) }
     FavoriteScreenContent(
-        meals = meals,
-        onRemoveClick = { selectedMeal = it }
+        meals = favMeals,
+        onRemoveClick = { mealId ->
+            selectedMealId = mealId
+            showDialog = true
+        },
+        modifier = modifier
     )
 
-    selectedMeal?.let { meal ->
+    // Show dialog based on the state
+    if (showDialog) {
         RemoveDialog(
-            onDismiss = { selectedMeal = null },
+            onDismiss = {
+                showDialog = false
+                selectedMealId = null
+            },
             onConfirm = {
-                viewModel.removeFromFavorites(meal)
-                selectedMeal = null
+                selectedMealId?.let { mealId ->
+                    viewModel.removeFavorite(mealId)
+                }
+                showDialog = false
+                selectedMealId = null
             }
         )
     }
+
+
 }
 
 @Composable
 fun FavoriteScreenContent(
-    meals: List<Meal>,
-    onRemoveClick: (Meal) -> Unit,
+    meals: List<Favorite>,
+    onRemoveClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
+    Log.d("meals: ", "FavoriteScreenContent: $meals ")
     Column(modifier = modifier.fillMaxSize()) {
 
         Row(
@@ -128,10 +125,10 @@ fun FavoriteScreenContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            items(meals) { meal ->
+            items(meals, key = {meal -> meal.id}) { meal ->
                 FavoriteItem(
                     meal = meal,
-                    onClickFav = { onRemoveClick(meal) }
+                    onClickFav = { onRemoveClick(meal.id) }
                 )
             }
         }
@@ -140,7 +137,7 @@ fun FavoriteScreenContent(
 
 @Composable
 fun FavoriteItem(
-    meal: Meal,
+    meal: Favorite,
     onClickFav: () -> Unit
 ) {
     Card(
@@ -154,7 +151,7 @@ fun FavoriteItem(
             Column {
 
                 AsyncImage(
-                    model = meal.imageUrl.ifEmpty { "https://via.placeholder.com/300" },
+                    model = meal.image.ifEmpty { "https://via.placeholder.com/300" },
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -167,7 +164,7 @@ fun FavoriteItem(
                 ) {
 
                     Text(
-                        text = meal.title,
+                        text = meal.name,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -236,27 +233,5 @@ fun RemoveDialog(
 @Composable
 fun FavoriteScreenPreview() {
 
-    val fakeMeals = listOf(
-        Meal(
-            id = "1",
-            title = "Pizza",
-            category = "Italian",
-            area = "Italy",
-            imageUrl = "",
-            isFavorite = true
-        ),
-        Meal(
-            id = "2",
-            title = "Burger",
-            category = "Fast Food",
-            area = "USA",
-            imageUrl = "",
-            isFavorite = true
-        )
-    )
 
-    FavoriteScreenContent(
-        meals = fakeMeals,
-        onRemoveClick = {}
-    )
 }
