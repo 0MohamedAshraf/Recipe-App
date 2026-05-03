@@ -42,13 +42,13 @@ import com.example.recipe_app.ui.theme.Recipe_AppTheme
 fun ProfileScreen(
     modifier: Modifier = Modifier,
     userName: String = "Lamiaa Ahmed",
-    joinedDate: String = "Joined April 2024",
+    joinedDate: String = "",
     favoriteCount: String = "10 items saved",
     plannedMeal: String = "Next: Grilled Salmon Tonight",
     onFavoriteMealsClick: () -> Unit = {},
     onPlannedMealsClick: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {}
+    onLogoutClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier

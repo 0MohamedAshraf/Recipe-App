@@ -1,5 +1,6 @@
 package com.example.recipe_app.screens.signInScreen.viewmodel
 
+import android.app.Activity
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
@@ -7,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.recipe_app.service.AccountService
 import com.google.firebase.Firebase
+import com.google.firebase.auth.OAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,6 +69,34 @@ class SignInViewModel(
                 isLoading.value = false
                 onError(e.localizedMessage ?: "Google Sign-In failed")
             }
+        }
+    }
+    fun authWithX(activity: Activity, onLoginSuccess: () -> Unit) {
+        // 1. Tell Firebase we want to use Twitter/X
+        val provider = OAuthProvider.newBuilder("twitter.com")
+
+        // 2. Check if there's a login already in progress (e.g., app was killed in background)
+        val pendingResultTask = Firebase.auth.pendingAuthResult
+        if (pendingResultTask != null) {
+            pendingResultTask
+                .addOnSuccessListener { authResult ->
+                    Log.d("abc -->", "User signed in with X: ${authResult.user?.displayName}")
+                    onLoginSuccess()
+                }
+                .addOnFailureListener { e ->
+                    Log.d("abc -->", "X Sign-in Failed: ${e.message}")
+                }
+        } else {
+            // 3. Launch the X Sign-in screen!
+            Firebase.auth
+                .startActivityForSignInWithProvider(activity, provider.build())
+                .addOnSuccessListener { authResult ->
+                    Log.d("abc -->", "User signed in with X: ${authResult.user?.displayName}")
+                    onLoginSuccess()
+                }
+                .addOnFailureListener { e ->
+                    Log.d("abc -->", "X Sign-in Failed: ${e.message}")
+                }
         }
     }
     fun continueAsGuest(onSignIn: () -> Unit){

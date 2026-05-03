@@ -100,25 +100,6 @@ fun FavoriteScreenContent(
     Log.d("meals: ", "FavoriteScreenContent: $meals ")
     Column(modifier = modifier.fillMaxSize()) {
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = null
-            )
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Text(
-                text = "My Favorites",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
 
         LazyColumn(
             contentPadding = PaddingValues(16.dp),

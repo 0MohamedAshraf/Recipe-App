@@ -14,7 +14,9 @@ import com.example.recipe_app.screens.homeScreen.dto.Meal
 fun MealLazyColumn(
     meals: List<Meal>,
     onMealClick : (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    favoriteIds: List<String>,
+    onFavClick: (Meal) -> Unit
 ){
 
     LazyColumn(
@@ -27,6 +29,10 @@ fun MealLazyColumn(
                 image = meal.strMealThumb,
                 onMealRowClick = {
                     onMealClick(meal.idMeal)
+                },
+                isFavorite = favoriteIds.contains(meal.idMeal),
+                onFavClick = {
+                    onFavClick(meal)
                 }
             )
         }

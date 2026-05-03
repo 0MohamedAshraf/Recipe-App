@@ -5,14 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.recipe_app.network.ApiClient
-import com.example.recipe_app.network.RemoteDataSourceImpl
 import com.example.recipe_app.screens.homeScreen.dto.Meal
+import com.example.recipe_app.screens.searchScreen.repo.SearchRepository
 import kotlinx.coroutines.launch
 
-class MealsListViewModel : ViewModel() {
-
-    private val remoteDataSource = RemoteDataSourceImpl(ApiClient.service)
+class MealsListViewModel(
+    private val repository: SearchRepository
+) : ViewModel() {
 
     var meals by mutableStateOf<List<Meal>>(emptyList())
         private set
@@ -29,12 +28,12 @@ class MealsListViewModel : ViewModel() {
             errorMessage = null
             try {
                 val response = when (filterType) {
-                    "category"   -> remoteDataSource.filterByCategory(filterValue)
-                    "country"    -> remoteDataSource.filterByCountry(filterValue)
-                    "ingredient" -> remoteDataSource.filterByIngredient(filterValue)
-                    else         -> null
+                    "category"   -> repository.filterByCategory(filterValue).body()?.meals
+                    "country"    -> repository.filterByCountry(filterValue).body()?.meals
+                    "ingredient" -> repository.filterByIngredient(filterValue).body()?.meals
+                    else         -> emptyList<Meal>()
                 }
-                allMeals = response?.body()?.meals ?: emptyList()
+                allMeals = response ?: emptyList()
                 meals = allMeals
                 if (meals.isEmpty()) errorMessage = "No meals found!"
             } catch (e: Exception) {

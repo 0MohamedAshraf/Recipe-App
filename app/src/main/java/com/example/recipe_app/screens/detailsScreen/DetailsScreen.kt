@@ -35,7 +35,6 @@ fun DetailsScreen(
     modifier: Modifier = Modifier
 ) {
     val meal by detailsViewModel.meal.collectAsStateWithLifecycle()
-    val isFavorite by detailsViewModel.isFavorite.collectAsStateWithLifecycle()
     val ingredients = meal?.getIngredients()
 
 

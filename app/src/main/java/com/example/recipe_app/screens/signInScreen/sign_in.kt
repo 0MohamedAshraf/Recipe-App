@@ -1,5 +1,6 @@
 package com.example.recipe_app.screens.signInScreen
 
+import android.app.Activity
 import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
@@ -68,6 +69,7 @@ fun SignInScreen(
     signInViewModel: SignInViewModel
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
     val coroutineScope = rememberCoroutineScope()
     val webClientId = "997963959679-vf19obiqj62ihri998aqgtl3q7ecc9mo.apps.googleusercontent.com"
 
@@ -293,16 +295,7 @@ fun SignInScreen(
                     tint = Color.Unspecified
                 )
 
-                Icon(
-                    painter = painterResource(id = R.drawable.facebook),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clickable {
 
-                        },
-                    tint = Color.Unspecified
-                )
 
                 Icon(
                     painter = painterResource(id = R.drawable.twitter),
@@ -310,7 +303,12 @@ fun SignInScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .clickable {
-
+                            activity?.let { act ->
+                                signInViewModel.authWithX(
+                                    activity = act,
+                                    onLoginSuccess = onLogin
+                                )
+                            }
                         },
                     tint = Color.Unspecified
                 )

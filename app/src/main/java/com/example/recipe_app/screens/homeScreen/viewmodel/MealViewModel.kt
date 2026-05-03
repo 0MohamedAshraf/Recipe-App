@@ -3,15 +3,21 @@ package com.example.recipe_app.screens.homeScreen.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.recipe_app.database.dao.FavoriteDao
+import com.example.recipe_app.database.entity.Favorite
 import com.example.recipe_app.screens.homeScreen.dto.Category
 import com.example.recipe_app.screens.homeScreen.dto.Meal
 import com.example.recipe_app.screens.homeScreen.repo.MealRepository
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MealViewModel(
-    private val mealRepository: MealRepository
+    private val mealRepository: MealRepository,
+    private val favoriteDao: FavoriteDao
 ) : ViewModel() {
 
     init {
@@ -26,6 +32,9 @@ class MealViewModel(
 
     private val _categoryOfMeals = MutableStateFlow<List<Meal>>(emptyList())
     val categoryOfMeals = _categoryOfMeals.asStateFlow()
+
+    private val _favIds = MutableStateFlow(emptyList<String>())
+    val favIds = _favIds.asStateFlow()
     fun getAllCategories(){
         viewModelScope.launch {
             val response = mealRepository.getAllCategories()
@@ -55,6 +64,29 @@ class MealViewModel(
         }
     }
 
+    fun addToFavorite(favorite: Favorite){
+        viewModelScope.launch(Dispatchers.IO){
+            favoriteDao.addFavorite(favorite)
+            getFavMeals()
+        }
+    }
+
+    fun getFavMeals(){
+        viewModelScope.launch(Dispatchers.IO){
+            val favs = favoriteDao.getAll(Firebase.auth.currentUser?.uid.orEmpty())
+            _favIds.value = favs.map { it.id }
+
+        }
+    }
+    fun removeFromFav(mealId: String){
+        viewModelScope.launch(Dispatchers.IO){
+            favoriteDao.removeFavorite(
+                userId = Firebase.auth.currentUser?.uid.orEmpty(),
+                mealId
+            )
+            getFavMeals()
+        }
+    }
     fun getMealByCategory(category: String){
         viewModelScope.launch {
             val response = mealRepository.filterByCategory(category)
