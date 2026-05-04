@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.recipe_app.components.CustomLoadingIndicator
 import com.example.recipe_app.components.SectionHeader
 import com.example.recipe_app.screens.detailsScreen.components.IngredientsGrid
 import com.example.recipe_app.screens.detailsScreen.components.InstructionCard
@@ -35,11 +37,13 @@ fun DetailsScreen(
     val meal by detailsViewModel.meal.collectAsStateWithLifecycle()
     val ingredients = meal?.getIngredients()
 
+
     DetailsContent(
         meal = meal,
         ingredients = ingredients,
         modifier = modifier
     )
+
 }
 @Composable
 fun DetailsContent(
@@ -47,20 +51,20 @@ fun DetailsContent(
     ingredients: List<RecipeIngredient>?,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
     ) {
-
-        MealImage(
-            image = meal?.strMealThumb ?: "",
-            mealName = meal?.strMeal ?: "",
-            area = meal?.strArea ?: "",
-            category = meal?.strCategory ?: "",
-        )
-
+        item {
+            MealImage(
+                image = meal?.strMealThumb ?: "",
+                mealName = meal?.strMeal ?: "",
+                area = meal?.strArea ?: "",
+                category = meal?.strCategory ?: "",
+            )
+        }
+        item {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
@@ -99,6 +103,7 @@ fun DetailsContent(
             InstructionCard(
                 instructions = meal?.strInstructions ?: ""
             )
+        }
         }
 
 

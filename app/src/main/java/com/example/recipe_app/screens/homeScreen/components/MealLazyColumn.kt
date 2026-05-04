@@ -2,6 +2,8 @@ package com.example.recipe_app.screens.homeScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -14,11 +16,16 @@ import com.example.recipe_app.screens.homeScreen.dto.Meal
 fun MealLazyColumn(
     meals: List<Meal>,
     onMealClick : (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    favoriteIds: List<String>,
+    onFavClick: (Meal) -> Unit
 ){
 
     LazyColumn(
-        modifier.fillMaxWidth(),
+        modifier
+            .fillMaxWidth()
+            .height(height = 415.dp)
+        ,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(items = meals){ meal ->
@@ -27,6 +34,10 @@ fun MealLazyColumn(
                 image = meal.strMealThumb,
                 onMealRowClick = {
                     onMealClick(meal.idMeal)
+                },
+                isFavorite = favoriteIds.contains(meal.idMeal),
+                onFavClick = {
+                    onFavClick(meal)
                 }
             )
         }

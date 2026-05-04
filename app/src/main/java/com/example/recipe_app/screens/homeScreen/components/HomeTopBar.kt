@@ -33,18 +33,11 @@ fun HomeTopBar(modifier: Modifier = Modifier){
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "RecipeHome",
+                    text = "Home",
                     fontWeight = FontWeight.Bold
                 )
             }
         },
-        actions = {
-            IconButton(onClick = {}){
-                Icon(
-                imageVector = Icons.Outlined.Notifications,
-                contentDescription = "Notifications",
-                )
-            }
-        }
+
     )
 }

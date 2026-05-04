@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -26,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,10 +36,16 @@ import com.example.recipe_app.screens.homeScreen.components.CategoriesRow
 import com.example.recipe_app.screens.homeScreen.components.MealLazyColumn
 import com.example.recipe_app.screens.homeScreen.components.MealOfTheDayCard
 import com.example.recipe_app.components.SectionHeader
+import com.example.recipe_app.database.dao.FavoriteDao
+import com.example.recipe_app.database.entity.Favorite
 import com.example.recipe_app.navBarItems
+import com.example.recipe_app.screens.homeScreen.dto.Category
+import com.example.recipe_app.screens.homeScreen.dto.Meal
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @Composable
 fun HomeScreen(
@@ -49,8 +56,62 @@ fun HomeScreen(
     val randomMeal by mealViewModel.randomMeal.collectAsStateWithLifecycle()
     val categories by mealViewModel.categories.collectAsStateWithLifecycle()
     val meals by mealViewModel.categoryOfMeals.collectAsStateWithLifecycle()
+    val favoriteIds by mealViewModel.favIds.collectAsStateWithLifecycle()
+    val selectedCategoryIndex by mealViewModel.selectedCategoryIndex.collectAsStateWithLifecycle()
 
-    Column(modifier.padding(horizontal = 16.dp)) {
+    HomeScreenContent(
+        randomMeal = randomMeal,
+        categories = categories,
+        meals = meals,
+        favoriteIds = favoriteIds,
+        onMealClick = onMealClick,
+        selectedCategoryIndex = selectedCategoryIndex,
+        onCategorySelect = { newIndex, categoryName ->
+            mealViewModel.setSelectedCategoryIndex(newIndex)
+            mealViewModel.getMealByCategory(categoryName)
+        },
+        modifier = modifier,
+        onFavClick = { meal ->
+            val fav = Favorite(
+                userId = Firebase.auth.currentUser?.uid.orEmpty(),
+                id = meal.idMeal,
+                name = meal.strMeal,
+                image = meal.strMealThumb.orEmpty(),
+                category = meal.strCategory.orEmpty(),
+                area = meal.strArea.orEmpty()
+            )
+            if(favoriteIds.contains(meal.idMeal)){
+                mealViewModel.removeFromFav(meal.idMeal)
+            }
+            else
+                mealViewModel.addToFavorite(fav)
+
+
+        }
+    )
+}
+
+
+@Composable
+fun HomeScreenContent(
+    randomMeal: Meal?,
+    categories: List<Category>,
+    meals: List<Meal>,
+    selectedCategoryIndex: Int,
+    onMealClick: (String) -> Unit,
+    onCategorySelect: (Int,String) -> Unit,
+    onFavClick: (Meal) -> Unit,
+    favoriteIds: List<String>,
+    modifier: Modifier = Modifier
+) {
+
+
+
+    Column(
+        modifier
+            .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Spacer(Modifier.height(8.dp))
 
         Row {
@@ -72,7 +133,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         MealOfTheDayCard(
-            title = randomMeal?.strMeal ?: "Error",
+            title = randomMeal?.strMeal ?: "",
             image = randomMeal?.strMealThumb,
             tags = randomMeal?.strTags,
             onViewRecipeClick = { onMealClick(randomMeal?.idMeal ?: "") }
@@ -82,21 +143,26 @@ fun HomeScreen(
 
         SectionHeader(title = "Category")
 
-
         Spacer(Modifier.height(16.dp))
 
         CategoriesRow(
-            mealViewModel = mealViewModel,
-            categories = categories
+            categories = categories,
+            selectedCategoryIndex = selectedCategoryIndex,
+            onCategorySelect = { newIndex, categoryName ->
+                onCategorySelect(newIndex, categoryName)
+            }
         )
 
         Spacer(Modifier.height(16.dp))
 
         SectionHeader(title = "Trending Meals")
         Spacer(Modifier.height(16.dp))
+
         MealLazyColumn(
-            meals,
-            onMealClick = onMealClick
+            meals = meals,
+            onMealClick = onMealClick,
+            onFavClick = onFavClick,
+            favoriteIds = favoriteIds ,
         )
     }
 }
@@ -105,51 +171,5 @@ fun HomeScreen(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenPreview() {
-    Recipe_AppTheme {
-        var selectedIndex by rememberSaveable { mutableStateOf(0) }
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                TopAppBar(
-                    title = { Text("RecipeHome", fontWeight = FontWeight.Bold) }
-                )
-            },
-            bottomBar = {
-                NavigationBar {
-                    navBarItems.forEachIndexed { index, item ->
-                        NavigationBarItem(
-                            selected = selectedIndex == index,
-                            icon = {
-                                Icon(
-                                    imageVector = item.icon,
-                                    contentDescription = null,
-                                    tint = if (selectedIndex == index) {
-                                        OrangeVariant
-                                    } else {
-                                        LocalContentColor.current
-                                    }
-                                )
-                            },
-                            label = { Text(item.label) },
-                            onClick = {
-                                selectedIndex = index
-                            }
-                        )
-                    }
-                }
-            }
-        ) { innerPadding ->
-            // HomeScreen(
-            //     MealViewModel(
-            //         MealRepositoryImpl(
-            //             RemoteDataSourceImpl(ApiClient.service)
-            //         )
-            //     ),
-            //     modifier = Modifier
-            //         .fillMaxSize()
-            //         .padding(innerPadding)
-            // )
-        }
-    }
 }

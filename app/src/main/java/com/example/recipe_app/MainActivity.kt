@@ -20,9 +20,12 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,6 +33,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.recipe_app.database.db.FavoriteDatabase
 import com.example.recipe_app.network.ApiClient
 import com.example.recipe_app.network.RemoteDataSourceImpl
 import com.example.recipe_app.screens.detailsScreen.DetailsScreen
@@ -38,8 +42,9 @@ import com.example.recipe_app.screens.detailsScreen.components.DetailsTopBar
 import com.example.recipe_app.screens.detailsScreen.repo.MealDetailsRepoImpl
 import com.example.recipe_app.screens.detailsScreen.viewmodel.DetailsViewModelFactory
 import com.example.recipe_app.screens.detailsScreen.viewmodel.MealDetailsViewModel
-import com.example.recipe_app.screens.favScreen.FavoriteScreenContent
-import com.example.recipe_app.screens.favScreen.Meal
+import com.example.recipe_app.screens.favScreen.FavoriteScreen
+import com.example.recipe_app.screens.favScreen.viewmodel.FavoriteViewModel
+import com.example.recipe_app.screens.favScreen.viewmodel.FavoriteViewModelFactory
 import com.example.recipe_app.screens.homeScreen.HomeScreen
 import com.example.recipe_app.screens.homeScreen.components.HomeTopBar
 import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
@@ -47,13 +52,29 @@ import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
 import com.example.recipe_app.screens.profileScreen.ProfileScreen
 import com.example.recipe_app.screens.profileScreen.components.ProfileTopBar
-import com.example.recipe_app.screens.profileScreen.components.SearchTopBar
-import com.example.recipe_app.screens.searchScreen.SearchScreen
+import com.example.recipe_app.screens.searchScreen.MealsListScreen
+import com.example.recipe_app.screens.searchScreen.SearchResultScreen
+import com.example.recipe_app.screens.searchScreen.components.SearchTopBar
 import com.example.recipe_app.screens.signInScreen.SignInScreen
-import com.example.recipe_app.screens.splashScreen.SplashScreenAnimation
+import com.example.recipe_app.screens.signInScreen.viewmodel.SignInViewModel
+import com.example.recipe_app.screens.signInScreen.viewmodel.SignInViewModelFactory
+import com.example.recipe_app.screens.signUpScreen.SignUpScreen
+import com.example.recipe_app.screens.splashScreen.SplashScreen
+import com.example.recipe_app.screens.splashScreen.viewmodel.SplashViewModel
+import com.example.recipe_app.screens.splashScreen.viewmodel.SplashViewModelFactory
+import com.example.recipe_app.service.AccountServiceImpl
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
-import com.google.firebase.auth.FirebaseAuth
+import com.example.recipe_app.screens.searchScreen.SearchScreen
+import com.example.recipe_app.screens.searchScreen.repo.SearchRepositoryImpl
+import com.example.recipe_app.screens.searchScreen.viewmodel.MealsListViewModel
+import com.example.recipe_app.screens.searchScreen.viewmodel.MealsListVmFactory
+import com.example.recipe_app.screens.searchScreen.viewmodel.SearchViewModel
+import com.example.recipe_app.screens.searchScreen.viewmodel.SearchViewModelFactory
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import androidx.compose.runtime.collectAsState
+import com.example.recipe_app.screens.favScreen.FavoriteTopBar
 
 data class BottomNavBarItem(
     val label: String,
@@ -69,6 +90,34 @@ val navBarItems = listOf(
 
 class MainActivity : ComponentActivity() {
 
+    val mealViewModel: MealViewModel by viewModels {
+        MealViewModelFactory(
+            repository = MealRepositoryImpl(
+                remoteDataSource = RemoteDataSourceImpl(
+                    apiService = ApiClient.service
+                )
+            ),
+            favoriteDao = FavoriteDatabase.getInstance(this).favoriteDao()
+        )
+    }
+    val favViewModel : FavoriteViewModel by viewModels {
+        FavoriteViewModelFactory(
+            favoriteDao = FavoriteDatabase.getInstance(this).favoriteDao(),
+            accountService = AccountServiceImpl()
+        )
+    }
+    val detailsViewModel : MealDetailsViewModel by viewModels {
+        DetailsViewModelFactory(
+            detailsRepo = MealDetailsRepoImpl(
+                remoteDataSource = RemoteDataSourceImpl(
+                    apiService = ApiClient.service
+                )
+            ),
+            favoriteDao = FavoriteDatabase.getInstance(this).favoriteDao(),
+            accountService = AccountServiceImpl()
+        )
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,10 +125,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             Recipe_AppTheme {
                 val navController = rememberNavController()
-                val auth = FirebaseAuth.getInstance()
-
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentScreen = backStackEntry?.destination
+                val isFav by detailsViewModel.isFavorite.collectAsStateWithLifecycle()
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
@@ -88,8 +136,15 @@ class MainActivity : ComponentActivity() {
                             currentScreen?.hasRoute<Routes.Details>() == true -> {
                                 DetailsTopBar(
                                     onBackClick = {navController.popBackStack()},
-                                    onFavoriteClick = {},
-                                    onShareClick = {}
+                                    onFavoriteClick = {
+                                        if(isFav){
+                                            detailsViewModel.removeFromFavorites()
+                                        }else{
+                                        detailsViewModel.addToFavorites()
+                                        }
+                                    },
+                                    onShareClick = {},
+                                    isFavorite = isFav
                                 )
                             }
                             currentScreen?.hasRoute<Routes.Profile>() == true -> {
@@ -100,9 +155,14 @@ class MainActivity : ComponentActivity() {
                             }
                             currentScreen?.hasRoute<Routes.Search>() == true -> {
                                 SearchTopBar(
-                                    onBackClick = { navController.popBackStack() },
-                                    onMicClick = {}
+                                    onBackClick = { navController.popBackStack() }
+
                                 )
+                            }
+                            currentScreen?.hasRoute<Routes.Favorites>() == true -> {
+                                FavoriteTopBar {
+                                    navController.popBackStack()
+                                }
                             }
                             else -> {}
 
@@ -164,48 +224,40 @@ class MainActivity : ComponentActivity() {
                     ) {
 
                         composable<Routes.Splash> {
-
-                            SplashScreenAnimation(
+                            val splashViewModel : SplashViewModel = viewModel(
+                                factory = SplashViewModelFactory(
+                                    service = AccountServiceImpl()
+                                )
+                            )
+                            SplashScreen(
                                 modifier = screenModifier,
-                                onAnimationEnd = {
-                                    val currentUser = auth.currentUser
-
-                                    if (currentUser != null) {
-                                        currentUser.reload().addOnCompleteListener {
-                                            val updatedUser = auth.currentUser
-
-                                            if (updatedUser != null && updatedUser.isEmailVerified) {
-                                                navController.navigate(route = MainGraph) {
-                                                    popUpTo<Routes.Splash> {
-                                                        inclusive = true
-                                                    }
-                                                    launchSingleTop = true
-                                                }
-                                            } else {
-                                                auth.signOut()
-                                                navController.navigate(route = AuthGraph) {
-                                                    popUpTo<Routes.Splash> {
-                                                        inclusive = true
-                                                    }
-                                                    launchSingleTop = true
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        navController.navigate(route = AuthGraph) {
-                                            popUpTo<Routes.Splash> {
-                                                inclusive = true
-                                            }
-                                            launchSingleTop = true
-                                        }
+                                splashViewModel = splashViewModel,
+                                navigateToMain = {
+                                    navController.navigate(route = MainGraph) {
+                                        popUpTo<Routes.Splash> { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                },
+                                navigateToAuth = {
+                                    navController.navigate(route = AuthGraph) {
+                                        popUpTo<Routes.Splash> { inclusive = true }
+                                        launchSingleTop = true
                                     }
                                 }
                             )
+
                         }
 
                         navigation<AuthGraph>(startDestination = Routes.SignIn) {
 
                             composable<Routes.SignIn> {
+
+                                val signInViewModel : SignInViewModel = viewModel(
+                                    factory = SignInViewModelFactory(
+                                        service = AccountServiceImpl()
+                                    )
+                                )
+
 
                                 SignInScreen(
                                     modifier = screenModifier,
@@ -213,6 +265,7 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate(route = Routes.SignUp)
                                     },
                                     onLogin = {
+                                        Log.d("abc -> ", "User: ${Firebase.auth.currentUser?.displayName}")
                                         navController.navigate(route = MainGraph) {
                                             popUpTo<AuthGraph> {
                                                 inclusive = true
@@ -220,14 +273,7 @@ class MainActivity : ComponentActivity() {
                                             launchSingleTop = true
                                         }
                                     },
-                                    onContinueAsGuest = {
-                                        navController.navigate(route = MainGraph) {
-                                            popUpTo<AuthGraph> {
-                                                inclusive = true
-                                            }
-                                            launchSingleTop = true
-                                        }
-                                    }
+                                    signInViewModel = signInViewModel
                                 )
                             }
 
@@ -245,14 +291,9 @@ class MainActivity : ComponentActivity() {
                         navigation<MainGraph>(startDestination = Routes.Home) {
 
                             composable<Routes.Home> {
-                                val mealViewModel: MealViewModel by viewModels {
-                                    MealViewModelFactory(
-                                        repository = MealRepositoryImpl(
-                                            remoteDataSource = RemoteDataSourceImpl(
-                                                apiService = ApiClient.service
-                                            )
-                                        )
-                                    )
+
+                                LaunchedEffect(Unit) {
+                                    mealViewModel.getFavMeals()
                                 }
                                 HomeScreen(
                                     mealViewModel = mealViewModel,
@@ -268,16 +309,10 @@ class MainActivity : ComponentActivity() {
                                 val mealId = backStackEntry.toRoute<Routes.Details>().id
                                 Log.d("abc --> ", "Details: {$mealId}")
 
-                                val detailsViewModel : MealDetailsViewModel by viewModels {
-                                    DetailsViewModelFactory(
-                                        detailsRepo = MealDetailsRepoImpl(
-                                            remoteDataSource = RemoteDataSourceImpl(
-                                                apiService = ApiClient.service
-                                            )
-                                        )
-                                    )
+
+                                LaunchedEffect(mealId) {
+                                    detailsViewModel.getMealById(mealId)
                                 }
-                                detailsViewModel.getMealById(mealId)
                                 DetailsScreen(
                                     detailsViewModel = detailsViewModel,
                                     modifier = screenModifier
@@ -285,36 +320,75 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable<Routes.Profile> { userId ->
-                                ProfileScreen(modifier = screenModifier)
+                                LaunchedEffect(Unit) {
+                                    favViewModel.getAllFavorites()
+                                }
+                                ProfileScreen(
+                                    modifier = screenModifier,
+                                    favoriteCount = "${favViewModel.favoriteMeals.collectAsState().value.size} items saved",
+                                    onFavoriteMealsClick = {
+                                        navController.navigate(Routes.Favorites)
+                                    },
+                                    accountService = AccountServiceImpl(),
+                                    onLogOutComplete = {
+                                        navController.navigate(AuthGraph)
+                                    }
+                                )
                             }
 
                             composable<Routes.Search>{
-                                SearchScreen(screenModifier)
+
+                                SearchScreen(
+                                    modifier = screenModifier,
+                                    onNavigateToSearchResult = {
+                                        navController.navigate(Routes.SearchResult)
+                                    },
+                                    onNavigateToMealsList = { filterType, filterValue ->
+                                        navController.navigate(Routes.MealsList(filterType, filterValue))
+                                    }
+                                )
                             }
-                            composable<Routes.Favorites>{
-                                val fakeMeals = listOf(
-                                    Meal(
-                                        id = "1",
-                                        title = "Pizza",
-                                        category = "Italian",
-                                        area = "Italy",
-                                        imageUrl = "https://www.foodandwine.com/thmb/Wd4lBRZz3X_8qBr69UOu2m7I2iw=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/classic-cheese-pizza-FT-RECIPE0422-31a2c938fc2546c9a07b7011658cfd05.jpg",
-                                        isFavorite = true
-                                    ),
-                                    Meal(
-                                        id = "2",
-                                        title = "Burger",
-                                        category = "Fast Food",
-                                        area = "USA",
-                                        imageUrl = "https://blog-content.omahasteaks.com/wp-content/uploads/2023/02/The-Mack-Burger-recipe-scaled.jpg",
-                                        isFavorite = true
+                            composable<Routes.SearchResult> {
+                                val searchViewModel: SearchViewModel = viewModel(
+                                    factory = SearchViewModelFactory(
+                                        repository = SearchRepositoryImpl(
+                                            remoteDataSource = RemoteDataSourceImpl(ApiClient.service)
+                                        )
                                     )
                                 )
+                                SearchResultScreen(
+                                    modifier = screenModifier,
+                                    navController = navController,
+                                    viewModel = searchViewModel
+                                )
+                            }
 
-                                FavoriteScreenContent(
-                                    meals = fakeMeals,
-                                    onRemoveClick = {},
-                                    screenModifier
+                            composable<Routes.MealsList> { backStackEntry ->
+                                val args = backStackEntry.toRoute<Routes.MealsList>()
+
+                                val mealsListViewModel: MealsListViewModel = viewModel(
+                                    factory = MealsListVmFactory(
+                                        repository = SearchRepositoryImpl(
+                                            remoteDataSource = RemoteDataSourceImpl(ApiClient.service)
+                                        )
+                                    )
+                                )
+                                MealsListScreen(
+                                    filterType = args.filterType,
+                                    filterValue = args.filterValue,
+                                    modifier = screenModifier,
+                                    navController = navController,
+                                    viewModel = mealsListViewModel
+                                )
+                            }
+                            composable<Routes.Favorites>{
+
+
+                                favViewModel.getAllFavorites()
+
+                                FavoriteScreen(
+                                    favViewModel,
+                                    modifier = screenModifier
                                 )
                             }
                         }

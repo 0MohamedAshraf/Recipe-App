@@ -2,6 +2,7 @@ package com.example.recipe_app.screens.detailsScreen.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
@@ -21,6 +22,7 @@ fun DetailsTopBar(
     onBackClick: () -> Unit,
     onFavoriteClick: () -> Unit,
     onShareClick: () -> Unit,
+    isFavorite: Boolean,
     modifier: Modifier = Modifier
 ) {
     TopAppBar(
@@ -33,7 +35,7 @@ fun DetailsTopBar(
         actions = {
             IconButton(onClick = onFavoriteClick) {
                 Icon(
-                    imageVector = Icons.Outlined.FavoriteBorder,
+                    imageVector = if(isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = "Favorite",
                     tint = OrangeVariant
                 )
@@ -62,6 +64,6 @@ fun DetailsTopBar(
 @Composable
 fun DetailsTopBarPreview(){
 
-    DetailsTopBar({},{},{})
+//    DetailsTopBar({},{},{})
 
 }

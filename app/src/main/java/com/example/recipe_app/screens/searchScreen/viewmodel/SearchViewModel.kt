@@ -5,19 +5,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.recipe_app.network.ApiClient
-import com.example.recipe_app.network.RemoteDataSourceImpl
 import com.example.recipe_app.screens.homeScreen.dto.Category
 import com.example.recipe_app.screens.homeScreen.dto.Meal
 import com.example.recipe_app.screens.searchScreen.dto.Country
 import com.example.recipe_app.screens.searchScreen.dto.Ingredient
+import com.example.recipe_app.screens.searchScreen.repo.SearchRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class SearchViewModel : ViewModel() {
-
-    private val remoteDataSource = RemoteDataSourceImpl(ApiClient.service)
+class SearchViewModel(
+    private val repo: SearchRepository
+) : ViewModel() {
 
     var searchResults by mutableStateOf<List<Meal>>(emptyList())
         private set
@@ -53,17 +52,17 @@ class SearchViewModel : ViewModel() {
         viewModelScope.launch {
             isTabsLoading = true
             try {
-                val categories = remoteDataSource.getAllCategories()
-                allCategories = categories.body()?.categories ?: emptyList()
-                filteredCategories = allCategories
+                val categories = repo.getAllCategories()
+                allCategories = categories.body()?.categories.orEmpty()
+                filteredCategories = categories.body()?.categories.orEmpty()
 
-                val countries = remoteDataSource.getAllCountries()
-                allCountries = countries.body()?.meals ?: emptyList()
-                filteredCountries = allCountries
+                val countries = repo.getAllCountries()
+                allCountries = countries.body()?.meals.orEmpty()
+                filteredCountries = countries.body()?.meals.orEmpty()
 
-                val ingredients = remoteDataSource.getAllIngredients()
-                allIngredients = ingredients.body()?.meals ?: emptyList()
-                filteredIngredients = allIngredients
+                val ingredients = repo.getAllIngredients()
+                allIngredients = ingredients.body()?.meals.orEmpty()
+                filteredIngredients = ingredients.body()?.meals.orEmpty()
             } catch (e: Exception) {
                 errorMessage = "Failed to load data!"
             } finally {
@@ -101,9 +100,9 @@ class SearchViewModel : ViewModel() {
             errorMessage = null
             try {
                 val response = if (query.length == 1)
-                    remoteDataSource.searchMealByLetter(query)
+                    repo.searchMealByLetter(query)
                 else
-                    remoteDataSource.searchMealByName(query)
+                    repo.searchMealByName(query)
                 searchResults = response.body()?.meals ?: emptyList()
                 if (searchResults.isEmpty()) errorMessage = "No meals found!"
             } catch (e: Exception) {
