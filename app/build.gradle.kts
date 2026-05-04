@@ -81,4 +81,8 @@ dependencies {
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
     implementation(libs.youtube.player.core)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("com.google.firebase:firebase-storage-ktx:21.0.1")
+
 }
