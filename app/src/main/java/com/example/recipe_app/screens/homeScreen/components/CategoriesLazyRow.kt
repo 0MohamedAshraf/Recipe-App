@@ -17,10 +17,10 @@ import com.example.recipe_app.screens.homeScreen.dto.Category
 @Composable
 fun CategoriesRow(
     categories: List<Category>,
-    onCategorySelect: (String) -> Unit,
+    selectedCategoryIndex: Int,
+    onCategorySelect: (Int, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var categorySelected by rememberSaveable { mutableStateOf(0) }
     LazyRow(
         modifier,
         horizontalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -28,10 +28,9 @@ fun CategoriesRow(
             CategoryItem(
                 category.strCategory,
                 category.strCategoryThumb,
-                selected = categorySelected == index,
+                selected = selectedCategoryIndex == index,
                 onItemClick = {
-                    categorySelected = index
-                    onCategorySelect(category.strCategory)
+                    onCategorySelect(index, category.strCategory)
                 }
             )
         }

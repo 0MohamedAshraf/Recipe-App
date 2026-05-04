@@ -80,4 +80,5 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation("com.google.android.libraries.identity.googleid:googleid:1.2.0")
     implementation(libs.youtube.player.core)
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 }

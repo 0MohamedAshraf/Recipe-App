@@ -9,6 +9,9 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 class AccountServiceImpl : AccountService {
@@ -37,7 +40,7 @@ class AccountServiceImpl : AccountService {
         Firebase.auth.createUserWithEmailAndPassword(email,password).await()
     }
 
-    override suspend fun signOut() {
+    override  fun signOut() {
         Firebase.auth.signOut()
     }
 
@@ -54,10 +57,27 @@ class AccountServiceImpl : AccountService {
     }
 
     override fun getUserName(): String {
-        return Firebase.auth.currentUser?.displayName ?: "Guest"
+        val name = Firebase.auth.currentUser?.displayName
+        return if(name.isNullOrEmpty()) "Guest" else name
     }
 
     override fun isEmailVerified(): Boolean {
         return Firebase.auth.currentUser?.isEmailVerified == true
+    }
+
+    override fun getJoinDate(): String {
+
+        val creationTimestamp = Firebase.auth.currentUser?.metadata?.creationTimestamp
+
+        return if (creationTimestamp != null) {
+            val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+            "Joined ${sdf.format(Date(creationTimestamp))}"
+        } else {
+            "Joined recently"
+        }
+    }
+
+    override fun isGuest(): Boolean {
+        return Firebase.auth.currentUser?.isAnonymous == true
     }
 }

@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -55,6 +57,7 @@ fun HomeScreen(
     val categories by mealViewModel.categories.collectAsStateWithLifecycle()
     val meals by mealViewModel.categoryOfMeals.collectAsStateWithLifecycle()
     val favoriteIds by mealViewModel.favIds.collectAsStateWithLifecycle()
+    val selectedCategoryIndex by mealViewModel.selectedCategoryIndex.collectAsStateWithLifecycle()
 
     HomeScreenContent(
         randomMeal = randomMeal,
@@ -62,7 +65,9 @@ fun HomeScreen(
         meals = meals,
         favoriteIds = favoriteIds,
         onMealClick = onMealClick,
-        onCategorySelect = { categoryName ->
+        selectedCategoryIndex = selectedCategoryIndex,
+        onCategorySelect = { newIndex, categoryName ->
+            mealViewModel.setSelectedCategoryIndex(newIndex)
             mealViewModel.getMealByCategory(categoryName)
         },
         modifier = modifier,
@@ -92,13 +97,21 @@ fun HomeScreenContent(
     randomMeal: Meal?,
     categories: List<Category>,
     meals: List<Meal>,
+    selectedCategoryIndex: Int,
     onMealClick: (String) -> Unit,
-    onCategorySelect: (String) -> Unit,
+    onCategorySelect: (Int,String) -> Unit,
     onFavClick: (Meal) -> Unit,
     favoriteIds: List<String>,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier.padding(horizontal = 16.dp)) {
+
+
+
+    Column(
+        modifier
+            .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
         Spacer(Modifier.height(8.dp))
 
         Row {
@@ -134,7 +147,10 @@ fun HomeScreenContent(
 
         CategoriesRow(
             categories = categories,
-            onCategorySelect = onCategorySelect
+            selectedCategoryIndex = selectedCategoryIndex,
+            onCategorySelect = { newIndex, categoryName ->
+                onCategorySelect(newIndex, categoryName)
+            }
         )
 
         Spacer(Modifier.height(16.dp))
@@ -155,51 +171,5 @@ fun HomeScreenContent(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenPreview() {
-    Recipe_AppTheme {
-        var selectedIndex by rememberSaveable { mutableStateOf(0) }
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                TopAppBar(
-                    title = { Text("RecipeHome", fontWeight = FontWeight.Bold) }
-                )
-            },
-            bottomBar = {
-                NavigationBar {
-                    navBarItems.forEachIndexed { index, item ->
-                        NavigationBarItem(
-                            selected = selectedIndex == index,
-                            icon = {
-                                Icon(
-                                    imageVector = item.icon,
-                                    contentDescription = null,
-                                    tint = if (selectedIndex == index) {
-                                        OrangeVariant
-                                    } else {
-                                        LocalContentColor.current
-                                    }
-                                )
-                            },
-                            label = { Text(item.label) },
-                            onClick = {
-                                selectedIndex = index
-                            }
-                        )
-                    }
-                }
-            }
-        ) { innerPadding ->
-            // HomeScreen(
-            //     MealViewModel(
-            //         MealRepositoryImpl(
-            //             RemoteDataSourceImpl(ApiClient.service)
-            //         )
-            //     ),
-            //     modifier = Modifier
-            //         .fillMaxSize()
-            //         .padding(innerPadding)
-            // )
-        }
-    }
 }

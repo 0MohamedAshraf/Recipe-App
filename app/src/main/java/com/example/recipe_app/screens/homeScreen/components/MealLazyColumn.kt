@@ -2,6 +2,8 @@ package com.example.recipe_app.screens.homeScreen.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -20,7 +22,10 @@ fun MealLazyColumn(
 ){
 
     LazyColumn(
-        modifier.fillMaxWidth(),
+        modifier
+            .fillMaxWidth()
+            .height(height = 415.dp)
+        ,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(items = meals){ meal ->

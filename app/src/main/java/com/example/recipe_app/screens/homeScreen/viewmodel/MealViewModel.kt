@@ -23,6 +23,7 @@ class MealViewModel(
     init {
         getRandomMeal()
         getAllCategories()
+        getMealByCategory("Beef")
     }
     private val _randomMeal = MutableStateFlow<Meal?>(null)
     val randomMeal = _randomMeal.asStateFlow()
@@ -30,11 +31,18 @@ class MealViewModel(
     private val _categories = MutableStateFlow<List<Category>>(emptyList())
     val categories = _categories.asStateFlow()
 
+    private val _selectedCategoryIndex = MutableStateFlow(0)
+    val selectedCategoryIndex = _selectedCategoryIndex.asStateFlow()
+
     private val _categoryOfMeals = MutableStateFlow<List<Meal>>(emptyList())
     val categoryOfMeals = _categoryOfMeals.asStateFlow()
 
     private val _favIds = MutableStateFlow(emptyList<String>())
     val favIds = _favIds.asStateFlow()
+
+    fun setSelectedCategoryIndex(index: Int) {
+        _selectedCategoryIndex.value = index
+    }
     fun getAllCategories(){
         viewModelScope.launch {
             val response = mealRepository.getAllCategories()

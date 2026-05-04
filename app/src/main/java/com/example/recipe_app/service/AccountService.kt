@@ -11,7 +11,7 @@ interface AccountService {
     suspend fun signInWithEmail(email: String, password: String)
     suspend fun signInWithGoogle(idToken: String)
     suspend fun signUp(email: String, password: String)
-    suspend fun signOut()
+    fun signOut()
     suspend fun deleteAccount()
     suspend fun continueAsGuest()
     fun hasUser() : Boolean
@@ -19,4 +19,7 @@ interface AccountService {
 
      fun isEmailVerified(): Boolean
 
+    fun getJoinDate() : String
+
+    fun isGuest() : Boolean
 }

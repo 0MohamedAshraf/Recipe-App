@@ -292,8 +292,9 @@ class MainActivity : ComponentActivity() {
 
                             composable<Routes.Home> {
 
-                                mealViewModel.getMealByCategory("Beef")
-                                mealViewModel.getFavMeals()
+                                LaunchedEffect(Unit) {
+                                    mealViewModel.getFavMeals()
+                                }
                                 HomeScreen(
                                     mealViewModel = mealViewModel,
                                     modifier = screenModifier,
@@ -319,25 +320,18 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable<Routes.Profile> { userId ->
-                                Log.d("abc --> ", "onCreate: ${Firebase.auth.currentUser?.displayName} ")
                                 LaunchedEffect(Unit) {
                                     favViewModel.getAllFavorites()
                                 }
-                                val name = Firebase.auth.currentUser?.displayName
                                 ProfileScreen(
                                     modifier = screenModifier,
-                                    userName = if(name.isNullOrEmpty()) "Guest" else name,
                                     favoriteCount = "${favViewModel.favoriteMeals.collectAsState().value.size} items saved",
                                     onFavoriteMealsClick = {
                                         navController.navigate(Routes.Favorites)
                                     },
-                                    onLogoutClick = {
-                                        Firebase.auth.signOut()
-                                        navController.navigate(AuthGraph){
-                                            popUpTo<MainGraph>{
-                                                inclusive = true
-                                            }
-                                        }
+                                    accountService = AccountServiceImpl(),
+                                    onLogOutComplete = {
+                                        navController.navigate(AuthGraph)
                                     }
                                 )
                             }
