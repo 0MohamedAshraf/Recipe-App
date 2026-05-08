@@ -1,6 +1,5 @@
 package com.example.recipe_app.screens.searchScreen
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,8 +10,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -25,11 +22,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.recipe_app.R
-
 
 @Composable
 fun SearchScreen(
@@ -61,7 +58,7 @@ fun SearchScreen(
                     tint = Color(0xFFFF8C42)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Pasta, Avocado, Italian...", color = Color.Gray, fontSize = 15.sp)
+                Text("Pasta, Avocado33, Italian...", color = Color.Gray, fontSize = 15.sp)
             }
         }
 
@@ -123,10 +120,10 @@ fun SearchScreen(
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth()) {
-            CuisineItem("Egyptian", R.drawable.indian, Modifier.weight(1f)) {
+            CuisineItem("Egyptian", R.drawable.kushari, Modifier.weight(1f)) {
                 onNavigateToMealsList("country", "Egyptian")
             }
-            CuisineItem("Algerian", R.drawable.french, Modifier.weight(1f)) {
+            CuisineItem("Algerian", R.drawable.algeria, Modifier.weight(1f)) {
                 onNavigateToMealsList("country", "Algerian")
             }
             CuisineItem("Greek", R.drawable.greek, Modifier.weight(1f)) {
@@ -154,10 +151,10 @@ fun SearchScreen(
             IngredientItem("Beef", R.drawable.beef, Modifier.weight(1f)) {
                 onNavigateToMealsList("ingredient", "Beef")
             }
-            IngredientItem("Pork", R.drawable.mushroom, Modifier.weight(1f)) {
+            IngredientItem("Pork", R.drawable.pork, Modifier.weight(1f)) {
                 onNavigateToMealsList("ingredient", "Pork")
             }
-            IngredientItem("Salmon", R.drawable.broccoli, Modifier.weight(1f)) {
+            IngredientItem("Salmon", R.drawable.salmon, Modifier.weight(1f)) {
                 onNavigateToMealsList("ingredient", "Salmon")
             }
         }

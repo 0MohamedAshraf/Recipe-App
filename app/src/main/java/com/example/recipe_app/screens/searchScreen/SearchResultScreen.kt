@@ -56,14 +56,13 @@ fun SearchResultScreen(
     viewModel: SearchViewModel
 ) {
     var searchValue by remember { mutableStateOf("") }
-    var showCategories by remember { mutableStateOf(true) }
-    var showCountries by remember { mutableStateOf(false) }
-    var showIngredients by remember { mutableStateOf(false) }
-
-    LaunchedEffect(searchValue, showCategories, showCountries, showIngredients) {
-        if (showCategories) viewModel.filterTabData(searchValue, 0)
-        if (showCountries) viewModel.filterTabData(searchValue, 1)
-        if (showIngredients) viewModel.filterTabData(searchValue, 2)
+    var selectedFilter by remember { mutableStateOf("category") }
+    LaunchedEffect(searchValue, selectedFilter) {
+        when (selectedFilter) {
+            "category"   -> viewModel.filterTabData(searchValue, 0)
+            "country"    -> viewModel.filterTabData(searchValue, 1)
+            "ingredient" -> viewModel.filterTabData(searchValue, 2)
+        }
     }
 
     LazyColumn(
@@ -71,7 +70,6 @@ fun SearchResultScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-
         item {
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -92,11 +90,7 @@ fun SearchResultScreen(
                     shape = RoundedCornerShape(28.dp),
                     singleLine = true,
                     leadingIcon = {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = null,
-                            tint = Color(0xFFFF8C42)
-                        )
+                        Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFFFF8C42))
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color(0xFFFFF3E6),
@@ -114,46 +108,22 @@ fun SearchResultScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(
-                    selected = showCategories,
-                    onClick = {
-                        showCategories = !showCategories
-                        if (showCategories) viewModel.filterTabData(searchValue, 0)
-                    },
-                    label = { Text("Category") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFFFF8C42),
-                        selectedLabelColor = Color.White
+                listOf("category", "ingredient", "country").forEach { filter ->
+                    FilterChip(
+                        selected = selectedFilter == filter,
+                        onClick = { selectedFilter = filter },
+                        label = { Text(filter.replaceFirstChar { it.uppercase() }) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFFFF8C42),
+                            selectedLabelColor = Color.White
+                        )
                     )
-                )
-                FilterChip(
-                    selected = showIngredients,
-                    onClick = {
-                        showIngredients = !showIngredients
-                        if (showIngredients) viewModel.filterTabData(searchValue, 2)
-                    },
-                    label = { Text("Ingredient") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFFFF8C42),
-                        selectedLabelColor = Color.White
-                    )
-                )
-                FilterChip(
-                    selected = showCountries,
-                    onClick = {
-                        showCountries = !showCountries
-                        if (showCountries) viewModel.filterTabData(searchValue, 1)
-                    },
-                    label = { Text("Country") },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFFFF8C42),
-                        selectedLabelColor = Color.White
-                    )
-                )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
         }
+
         if (viewModel.isTabsLoading) {
             item {
                 Box(
@@ -165,18 +135,13 @@ fun SearchResultScreen(
             }
         } else {
 
-            if (showCategories) {
+
+            if (selectedFilter == "category") {
                 item {
-                    Text(
-                        "Categories",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color(0xFFFF8C42)
-                    )
+                    Text("Categories", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFFFF8C42))
                     HorizontalDivider(color = Color(0xFFFFE0CC))
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-
                 items(items = viewModel.filteredCategories.chunked(2)) { row ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -189,7 +154,9 @@ fun SearchResultScreen(
                                     .height(110.dp)
                                     .clip(RoundedCornerShape(14.dp))
                                     .clickable {
-                                        navController.navigate(Routes.MealsList("category", category.strCategory))
+                                        navController.navigate(
+                                            Routes.MealsList("category", category.strCategory)
+                                        )
                                     }
                             ) {
                                 AsyncImage(
@@ -203,7 +170,7 @@ fun SearchResultScreen(
                                         .matchParentSize()
                                         .background(
                                             Brush.verticalGradient(
-                                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
+                                                listOf(Color.Transparent, Color.Black.copy(0.6f))
                                             )
                                         )
                                 )
@@ -221,19 +188,12 @@ fun SearchResultScreen(
                 }
             }
 
-
-            if (showCountries) {
+            if (selectedFilter == "country") {
                 item {
-                    Text(
-                        "Countries",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color(0xFFFF8C42)
-                    )
+                    Text("Countries", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFFFF8C42))
                     HorizontalDivider(color = Color(0xFFFFE0CC))
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-
                 items(items = viewModel.filteredCountries.chunked(3)) { row ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -247,16 +207,15 @@ fun SearchResultScreen(
                                     .clip(RoundedCornerShape(12.dp))
                                     .clickable {
                                         navController.navigate(
-                                            Routes.MealsList("country",country.strArea)
+                                            Routes.MealsList("country", country.strArea)
                                         )
-
                                     }
                                     .padding(8.dp)
                             ) {
-                                Text(text = getFlagEmoji(country.strArea), fontSize = 36.sp)
+                                Text(getFlagEmoji(country.strArea), fontSize = 36.sp)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = country.strArea,
+                                    country.strArea,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.DarkGray
@@ -269,18 +228,12 @@ fun SearchResultScreen(
                 }
             }
 
-            if (showIngredients) {
+            if (selectedFilter == "ingredient") {
                 item {
-                    Text(
-                        "Ingredients",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color(0xFFFF8C42)
-                    )
+                    Text("Ingredients", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color(0xFFFF8C42))
                     HorizontalDivider(color = Color(0xFFFFE0CC))
                     Spacer(modifier = Modifier.height(8.dp))
                 }
-
                 items(items = viewModel.filteredIngredients.chunked(3)) { row ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -294,7 +247,6 @@ fun SearchResultScreen(
                                     .background(Color(0xFFFFF3E6))
                                     .border(1.dp, Color(0xFFFFE0CC), RoundedCornerShape(16.dp))
                                     .clickable {
-
                                         navController.navigate(
                                             Routes.MealsList("ingredient", ingredient.strIngredient)
                                         )
@@ -309,7 +261,7 @@ fun SearchResultScreen(
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = ingredient.strIngredient,
+                                    ingredient.strIngredient,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.DarkGray
@@ -321,26 +273,6 @@ fun SearchResultScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
-
-            if (!showCategories && !showCountries && !showIngredients) {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("🔍", fontSize = 48.sp)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = "Choose a filter to explore meals",
-                                color = Color.Gray,
-                                fontSize = 16.sp
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
-
 }
