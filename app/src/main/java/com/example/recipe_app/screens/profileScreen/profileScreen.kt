@@ -1,23 +1,15 @@
 package com.example.recipe_app.screens.profileScreen
 
-import android.content.Context
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
+import android.app.Activity
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -26,51 +18,29 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CameraAlt
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.ChevronRight
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Logout
-import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
-import coil.compose.AsyncImage
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.example.recipe_app.R
+import com.example.recipe_app.screens.profileScreen.viewmodel.ThemeViewModel
 import com.example.recipe_app.service.AccountService
 import com.example.recipe_app.service.UserProfile
 import com.example.recipe_app.ui.theme.OrangeVariant
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-
-val Context.avatarDataStore by preferencesDataStore(name = "avatar_prefs")
-
-
-
 
 private val avatarColors = listOf(
     Color(0xFFE6D7CC),
@@ -85,16 +55,16 @@ private val avatarColors = listOf(
 fun ProfileScreen(
     modifier: Modifier = Modifier,
     accountService: AccountService,
+    themeViewModel: ThemeViewModel,
     favoriteCount: String,
-    plannedMeal: String = "Next: Grilled Salmon Tonight",
     onFavoriteMealsClick: () -> Unit = {},
-    onPlannedMealsClick: () -> Unit = {},
     onLogOutComplete: () -> Unit
 ) {
     val userProfile by accountService.userProfile.collectAsState(
         initial = UserProfile("Loading...", "", null)
     )
 
+    val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val avatarPreferences = remember { AvatarPreferences(context) }
     val selectedAvatarIndex by avatarPreferences.selectedAvatar.collectAsState(initial = 0)
@@ -102,10 +72,16 @@ fun ProfileScreen(
 
     var showAvatarDialog by rememberSaveable { mutableStateOf(false) }
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
+    var showLanguageDialog by rememberSaveable { mutableStateOf(false) }
     var profileImageUrl by rememberSaveable { mutableStateOf<String?>(userProfile.photoUrl) }
 
     LaunchedEffect(userProfile.photoUrl) {
         profileImageUrl = userProfile.photoUrl
+    }
+
+    // Language Dialog (Omitted for brevity, kept same as your previous code)
+    if (showLanguageDialog) {
+        LanguageSelectionDialog(onDismiss = { showLanguageDialog = false })
     }
 
     val launcher = rememberLauncherForActivityResult(
@@ -122,208 +98,88 @@ fun ProfileScreen(
     }
 
     if (showAvatarDialog) {
-        AlertDialog(
-            onDismissRequest = { showAvatarDialog = false },
-            title = {
-                Text(
-                    text = "Choose your avatar",
-                    fontWeight = FontWeight.Bold
-                )
+        AvatarSelectionDialog(
+            selectedAvatarIndex = selectedAvatarIndex,
+            onAvatarSelected = { index ->
+                coroutineScope.launch { avatarPreferences.saveSelectedAvatar(index) }
+                showAvatarDialog = false
             },
-            text = {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    itemsIndexed(avatarColors) { index, color ->
-                        AvatarOption(
-                            color = color,
-                            selected = selectedAvatarIndex == index
-                        ) {
-                            coroutineScope.launch {
-                                avatarPreferences.saveSelectedAvatar(index)
-                            }
-                            showAvatarDialog = false
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showAvatarDialog = false }) {
-                    Text(text = "Cancel")
-                }
-            }
+            onDismiss = { showAvatarDialog = false }
         )
     }
 
     if (showLogoutDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
-            title = {
-                Text(
-                    text = "Logout",
-                    fontWeight = FontWeight.Bold
-                )
+        LogoutConfirmationDialog(
+            onConfirm = {
+                showLogoutDialog = false
+                accountService.signOut()
+                onLogOutComplete()
             },
-            text = {
-                Text(text = "Are you sure you want to log out?")
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showLogoutDialog = false
-                        accountService.signOut()
-                        onLogOutComplete()
-                    }
-                ) {
-                    Text(
-                        text = "Yes",
-                        color = Color(0xFFE76F51)
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) {
-                    Text(text = "No")
-                }
-            }
+            onDismiss = { showLogoutDialog = false }
         )
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFCFAF7))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 16.dp)
             .padding(bottom = 90.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(contentAlignment = Alignment.BottomEnd) {
-                    if (profileImageUrl != null) {
-                        AsyncImage(
-                            model = profileImageUrl,
-                            contentDescription = "Profile",
-                            modifier = Modifier
-                                .size(110.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        SelectedAvatar(
-                            color = avatarColors[selectedAvatarIndex],
-                            modifier = Modifier.clickable { showAvatarDialog = true }
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(OrangeVariant)
-                            .clickable { launcher.launch("image/*") }
-                            .border(2.dp, Color.White, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.CameraAlt,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = "Change avatar",
-                    color = OrangeVariant,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.clickable { showAvatarDialog = true }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = userProfile.name,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF222222),
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = userProfile.joinDate,
-            color = Color(0xFF9A948E),
-            fontSize = 14.sp,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+        // Profile Header Section
+        ProfileHeader(
+            profileImageUrl = profileImageUrl,
+            selectedAvatarIndex = selectedAvatarIndex,
+            userName = userProfile.name,
+            joinDate = userProfile.joinDate,
+            onAvatarClick = { showAvatarDialog = true },
+            onCameraClick = { launcher.launch("image/*") }
         )
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        SectionTitle("MY KITCHEN")
-
+        SectionTitle(stringResource(R.string.my_kitchen))
         Spacer(modifier = Modifier.height(12.dp))
 
         ProfileMenuCard(
             icon = Icons.Outlined.FavoriteBorder,
             iconTint = Color(0xFFF4A261),
-            title = "Favorite Meals",
+            title = stringResource(R.string.favorite_meals),
             subtitle = favoriteCount,
             onClick = onFavoriteMealsClick
         )
+        
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        ProfileMenuCard(
-            icon = Icons.Outlined.CalendarMonth,
-            iconTint = Color(0xFFF4A261),
-            title = "Planned Meals",
-            subtitle = plannedMeal,
-            onClick = onPlannedMealsClick
-        )
 
         Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        Spacer(modifier = Modifier.height(24.dp))
 
-        HorizontalDivider(
-            modifier = Modifier.padding(vertical = 16.dp),
-            thickness = 1.dp,
-            color = Color(0xFFE8E1DA)
+        SectionTitle(stringResource(R.string.account))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Dark Mode Toggle
+        ProfileToggleRow(
+            icon = Icons.Outlined.DarkMode,
+            iconTint = Color(0xFF9C27B0),
+            title = "Dark Mode",
+            isChecked = isDarkMode,
+            onCheckedChange = { themeViewModel.toggleTheme(it) }
         )
-
-        SectionTitle("ACCOUNT")
-
         Spacer(modifier = Modifier.height(12.dp))
 
         ProfileMenuRow(
-            icon = Icons.Outlined.PersonOutline,
-            iconTint = Color(0xFF7D8CA3),
-            title = "Edit Profile",
-            onClick = { showAvatarDialog = true }
+            icon = Icons.Outlined.Language,
+            iconTint = Color(0xFF4A90E2),
+            title = stringResource(R.string.language),
+            onClick = { showLanguageDialog = true }
         )
-
-        Spacer(modifier = Modifier.height(6.dp))
-
         ProfileMenuRow(
-            icon = Icons.Outlined.Logout,
+            icon = if (accountService.isGuest()) Icons.Outlined.Login else Icons.Outlined.Logout,
             iconTint = Color(0xFFE76F51),
-            title = if (accountService.isGuest()) "Login" else "Logout",
-            titleColor = if (!accountService.isGuest()) Color(0xFFE76F51) else Color(0xFF222222),
+            title = if (accountService.isGuest()) stringResource(R.string.login) else stringResource(R.string.logout),
+            titleColor = if (!accountService.isGuest()) Color(0xFFE76F51) else MaterialTheme.colorScheme.onSurface,
             showArrow = false,
             onClick = {
                 if (!accountService.isGuest()) {
@@ -338,50 +194,100 @@ fun ProfileScreen(
 }
 
 @Composable
-fun SelectedAvatar(
-    color: Color,
-    modifier: Modifier = Modifier
+fun ProfileToggleRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    title: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .size(110.dp)
-            .clip(CircleShape)
-            .background(color),
-        contentAlignment = Alignment.Center
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Outlined.PersonOutline,
-            contentDescription = null,
-            tint = Color(0xFF7A6F68),
-            modifier = Modifier.size(56.dp)
+        Icon(imageVector = icon, contentDescription = null, tint = iconTint)
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = title,
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Switch(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = OrangeVariant
+            )
         )
     }
 }
 
 @Composable
-fun AvatarOption(
-    color: Color,
-    selected: Boolean,
-    onClick: () -> Unit
+fun ProfileHeader(
+    profileImageUrl: String?,
+    selectedAvatarIndex: Int,
+    userName: String,
+    joinDate: String,
+    onAvatarClick: () -> Unit,
+    onCameraClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .size(78.dp)
-            .clip(CircleShape)
-            .background(color)
-            .border(
-                width = if (selected) 3.dp else 1.dp,
-                color = if (selected) OrangeVariant else Color.Transparent,
-                shape = CircleShape
-            )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.PersonOutline,
-            contentDescription = null,
-            tint = Color(0xFF6E625A),
-            modifier = Modifier.size(36.dp)
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Box(contentAlignment = Alignment.BottomEnd) {
+            if (profileImageUrl != null) {
+                AsyncImage(
+                    model = profileImageUrl,
+                    contentDescription = "Profile",
+                    modifier = Modifier.size(110.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                SelectedAvatar(
+                    color = avatarColors[selectedAvatarIndex],
+                    modifier = Modifier.clickable { onAvatarClick() }
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(OrangeVariant)
+                    .clickable { onCameraClick() }
+                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.CameraAlt,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            text = stringResource(R.string.change_avatar),
+            color = OrangeVariant,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.clickable { onAvatarClick() }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = userName,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = joinDate,
+            color = MaterialTheme.colorScheme.secondary,
+            fontSize = 14.sp
         )
     }
 }
@@ -390,7 +296,7 @@ fun AvatarOption(
 fun SectionTitle(title: String) {
     Text(
         text = title,
-        color = Color(0xFF9A948E),
+        color = MaterialTheme.colorScheme.secondary,
         fontSize = 13.sp,
         fontWeight = FontWeight.SemiBold
     )
@@ -408,14 +314,12 @@ fun ProfileMenuCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color.White,
-        tonalElevation = 1.dp,
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp,
         shadowElevation = 2.dp
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 18.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -425,39 +329,14 @@ fun ProfileMenuCard(
                     .background(iconTint.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconTint
-                )
+                Icon(imageVector = icon, contentDescription = null, tint = iconTint)
             }
-
             Spacer(modifier = Modifier.width(14.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF222222)
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = subtitle,
-                    fontSize = 13.sp,
-                    color = Color(0xFF9A948E)
-                )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                Text(text = subtitle, fontSize = 13.sp, color = MaterialTheme.colorScheme.secondary)
             }
-
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                tint = Color(0xFFB8B2AC)
-            )
+            Icon(imageVector = Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
         }
     }
 }
@@ -467,38 +346,100 @@ fun ProfileMenuRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconTint: Color,
     title: String,
-    titleColor: Color = Color(0xFF222222),
+    titleColor: Color = Color.Unspecified,
     showArrow: Boolean = true,
     onClick: () -> Unit
 ) {
+    val finalTitleColor = if (titleColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else titleColor
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().clickable { onClick() }.padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = iconTint
-        )
-
+        Icon(imageVector = icon, contentDescription = null, tint = iconTint)
         Spacer(modifier = Modifier.width(16.dp))
-
-        Text(
-            text = title,
-            fontSize = 16.sp,
-            color = titleColor,
-            modifier = Modifier.weight(1f)
-        )
-
+        Text(text = title, fontSize = 16.sp, color = finalTitleColor, modifier = Modifier.weight(1f))
         if (showArrow) {
-            Icon(
-                imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = null,
-                tint = Color(0xFFB8B2AC)
-            )
+            Icon(imageVector = Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.outline)
         }
+    }
+}
+
+// Dialog helper components
+@Composable
+fun LanguageSelectionDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.language), fontWeight = FontWeight.Bold) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                TextButton(onClick = {
+                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
+                    onDismiss()
+                }) { Text("English", fontSize = 18.sp) }
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(onClick = {
+                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("ar"))
+                    onDismiss()
+                }) { Text("العربية", fontSize = 18.sp) }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(text = stringResource(R.string.cancel)) } }
+    )
+}
+
+@Composable
+fun AvatarSelectionDialog(selectedAvatarIndex: Int, onAvatarSelected: (Int) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.choose_your_avatar), fontWeight = FontWeight.Bold) },
+        text = {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier.fillMaxWidth().height(220.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                itemsIndexed(avatarColors) { index, color ->
+                    AvatarOption(color = color, selected = selectedAvatarIndex == index) { onAvatarSelected(index) }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(text = stringResource(R.string.cancel)) } }
+    )
+}
+
+@Composable
+fun LogoutConfirmationDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.logout), fontWeight = FontWeight.Bold) },
+        text = { Text(text = stringResource(R.string.are_you_sure_you_want_to_log_out)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = stringResource(R.string.yes), color = Color(0xFFE76F51))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(text = stringResource(R.string.no)) } }
+    )
+}
+
+@Composable
+fun SelectedAvatar(color: Color, modifier: Modifier = Modifier) {
+    Box(modifier = modifier.size(110.dp).clip(CircleShape).background(color), contentAlignment = Alignment.Center) {
+        Icon(imageVector = Icons.Outlined.PersonOutline, contentDescription = null, tint = Color(0xFF7A6F68), modifier = Modifier.size(56.dp))
+    }
+}
+
+@Composable
+fun AvatarOption(color: Color, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.size(78.dp).clip(CircleShape).background(color)
+            .border(width = if (selected) 3.dp else 1.dp, color = if (selected) OrangeVariant else Color.Transparent, shape = CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(imageVector = Icons.Outlined.PersonOutline, contentDescription = null, tint = Color(0xFF6E625A), modifier = Modifier.size(36.dp))
     }
 }

@@ -19,20 +19,29 @@ class MealDetailsViewModel(
     private val favoriteDao: FavoriteDao
 ) : ViewModel(){
 
+    private val _isOffline = MutableStateFlow(false)
+    val isOffline = _isOffline.asStateFlow()
     private val _meal = MutableStateFlow<Meal?>(null)
     val meal = _meal.asStateFlow()
 
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite = _isFavorite.asStateFlow()
-    fun getMealById(id: String){
+
+    fun getMealById(id: String) {
         viewModelScope.launch {
-            val response = mealDetailsRepo.getMealById(id)
-            if(response.isSuccessful){
-                _meal.value = response.body()?.meals?.get(0)
-                isMealFavorite()
-            }else{
-                Log.d("abc --> ", "getMealById: didn't find meal")
-                Log.d("abc --> ", "getMealById: ${response.errorBody()}")
+            try {
+                val response = mealDetailsRepo.getMealById(id)
+                if (response.isSuccessful) {
+                    _meal.value = response.body()?.meals?.get(0)
+                    isMealFavorite()
+                    _isOffline.value = false
+                } else {
+                    Log.d("abc --> ", "getMealById: didn't find meal")
+                    _isOffline.value = true
+                }
+            } catch (e: Exception) {
+                Log.e("abc --> ", "getMealById exception: ${e.message}")
+                _isOffline.value = true
             }
         }
     }

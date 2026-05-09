@@ -2,10 +2,11 @@ package com.example.recipe_app
 
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -21,9 +22,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -33,16 +39,18 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.example.recipe_app.components.LoginRequiredDialog
 import com.example.recipe_app.database.db.FavoriteDatabase
 import com.example.recipe_app.network.ApiClient
 import com.example.recipe_app.network.RemoteDataSourceImpl
 import com.example.recipe_app.screens.detailsScreen.DetailsScreen
-import com.example.recipe_app.screens.detailsScreen.components.DetailsBottomNav
 import com.example.recipe_app.screens.detailsScreen.components.DetailsTopBar
 import com.example.recipe_app.screens.detailsScreen.repo.MealDetailsRepoImpl
 import com.example.recipe_app.screens.detailsScreen.viewmodel.DetailsViewModelFactory
 import com.example.recipe_app.screens.detailsScreen.viewmodel.MealDetailsViewModel
 import com.example.recipe_app.screens.favScreen.FavoriteScreen
+import com.example.recipe_app.screens.favScreen.FavoriteTopBar
+import com.example.recipe_app.screens.favScreen.RemoveDialog
 import com.example.recipe_app.screens.favScreen.viewmodel.FavoriteViewModel
 import com.example.recipe_app.screens.favScreen.viewmodel.FavoriteViewModelFactory
 import com.example.recipe_app.screens.homeScreen.HomeScreen
@@ -51,10 +59,19 @@ import com.example.recipe_app.screens.homeScreen.repo.MealRepositoryImpl
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModelFactory
 import com.example.recipe_app.screens.profileScreen.ProfileScreen
+import com.example.recipe_app.screens.profileScreen.ThemePreferences
 import com.example.recipe_app.screens.profileScreen.components.ProfileTopBar
+import com.example.recipe_app.screens.profileScreen.viewmodel.ThemeViewModel
+import com.example.recipe_app.screens.profileScreen.viewmodel.ThemeViewModelFactory
 import com.example.recipe_app.screens.searchScreen.MealsListScreen
+import com.example.recipe_app.screens.searchScreen.SearchScreen
 import com.example.recipe_app.screens.searchScreen.SearchResultScreen
 import com.example.recipe_app.screens.searchScreen.components.SearchTopBar
+import com.example.recipe_app.screens.searchScreen.repo.SearchRepositoryImpl
+import com.example.recipe_app.screens.searchScreen.viewmodel.MealsListViewModel
+import com.example.recipe_app.screens.searchScreen.viewmodel.MealsListVmFactory
+import com.example.recipe_app.screens.searchScreen.viewmodel.SearchViewModel
+import com.example.recipe_app.screens.searchScreen.viewmodel.SearchViewModelFactory
 import com.example.recipe_app.screens.signInScreen.SignInScreen
 import com.example.recipe_app.screens.signInScreen.viewmodel.SignInViewModel
 import com.example.recipe_app.screens.signInScreen.viewmodel.SignInViewModelFactory
@@ -65,30 +82,26 @@ import com.example.recipe_app.screens.splashScreen.viewmodel.SplashViewModelFact
 import com.example.recipe_app.service.AccountServiceImpl
 import com.example.recipe_app.ui.theme.OrangeVariant
 import com.example.recipe_app.ui.theme.Recipe_AppTheme
-import com.example.recipe_app.screens.searchScreen.SearchScreen
-import com.example.recipe_app.screens.searchScreen.repo.SearchRepositoryImpl
-import com.example.recipe_app.screens.searchScreen.viewmodel.MealsListViewModel
-import com.example.recipe_app.screens.searchScreen.viewmodel.MealsListVmFactory
-import com.example.recipe_app.screens.searchScreen.viewmodel.SearchViewModel
-import com.example.recipe_app.screens.searchScreen.viewmodel.SearchViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import androidx.compose.runtime.collectAsState
-import com.example.recipe_app.screens.favScreen.FavoriteTopBar
 
 data class BottomNavBarItem(
-    val label: String,
+    @StringRes val labelRes: Int,
     val icon: ImageVector
 )
 
 val navBarItems = listOf(
-    BottomNavBarItem("HOME", Icons.Outlined.Home),
-    BottomNavBarItem("SEARCH", Icons.Outlined.Search),
-    BottomNavBarItem("FAVORITES", Icons.Outlined.FavoriteBorder),
-    BottomNavBarItem("PROFILE", Icons.Outlined.Person)
+    BottomNavBarItem(R.string.home, Icons.Outlined.Home),
+    BottomNavBarItem(R.string.search, Icons.Outlined.Search),
+    BottomNavBarItem(R.string.favorites, Icons.Outlined.FavoriteBorder),
+    BottomNavBarItem(R.string.profile, Icons.Outlined.Person)
 )
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
+
+    private val themeViewModel: ThemeViewModel by viewModels {
+        ThemeViewModelFactory(ThemePreferences(this))
+    }
 
     val mealViewModel: MealViewModel by viewModels {
         MealViewModelFactory(
@@ -123,11 +136,38 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Recipe_AppTheme {
+            val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
+            
+            Recipe_AppTheme(darkTheme = isDarkMode) {
                 val navController = rememberNavController()
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 val currentScreen = backStackEntry?.destination
                 val isFav by detailsViewModel.isFavorite.collectAsStateWithLifecycle()
+                var showRemoveDialog by remember { mutableStateOf(false) }
+                val isGuest = Firebase.auth.currentUser?.isAnonymous == true
+                var showLoginDialog by remember { mutableStateOf(false) }
+
+                if (showLoginDialog) {
+                    LoginRequiredDialog(
+                        onDismiss = { showLoginDialog = false },
+                        onLoginConfirm = {
+                            showLoginDialog = false
+                            Firebase.auth.signOut()
+                            navController.navigate(AuthGraph) {
+                                popUpTo<MainGraph> { inclusive = true }
+                            }
+                        }
+                    )
+                }
+                if (showRemoveDialog) {
+                    RemoveDialog(
+                        onDismiss = { showRemoveDialog = false },
+                        onConfirm = {
+                            detailsViewModel.removeFromFavorites()
+                            showRemoveDialog = false
+                        }
+                    )
+                }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
@@ -137,13 +177,16 @@ class MainActivity : ComponentActivity() {
                                 DetailsTopBar(
                                     onBackClick = {navController.popBackStack()},
                                     onFavoriteClick = {
-                                        if(isFav){
-                                            detailsViewModel.removeFromFavorites()
-                                        }else{
-                                        detailsViewModel.addToFavorites()
+                                        if (isGuest) {
+                                            showLoginDialog = true
+                                        } else {
+                                            if(isFav){
+                                                showRemoveDialog = true
+                                            }else{
+                                                detailsViewModel.addToFavorites()
+                                            }
                                         }
                                     },
-                                    onShareClick = {},
                                     isFavorite = isFav
                                 )
                             }
@@ -183,6 +226,7 @@ class MainActivity : ComponentActivity() {
                                 }
                                 NavigationBar {
                                     navBarItems.forEachIndexed { index, item ->
+                                        val label = stringResource(item.labelRes)
                                         NavigationBarItem(
                                             selected = selectedIndex == index,
                                             onClick = {
@@ -196,7 +240,7 @@ class MainActivity : ComponentActivity() {
                                             icon = {
                                                 Icon(
                                                     imageVector = item.icon,
-                                                    contentDescription = item.label,
+                                                    contentDescription = label,
                                                     tint = if (selectedIndex == index) {
                                                         OrangeVariant
                                                     } else {
@@ -204,13 +248,12 @@ class MainActivity : ComponentActivity() {
                                                     }
                                                 )
                                             },
-                                            label = { Text(item.label) }
+                                            label = { Text(label) }
                                         )
                                     }
                                 }
                             }
-                            currentScreen?.hasRoute<Routes.Details>() == true ->
-                                NavigationBar{DetailsBottomNav({})}
+
                             else -> {}
                         }
                     }
@@ -301,6 +344,13 @@ class MainActivity : ComponentActivity() {
                                     onMealClick = { mealId ->
                                         Log.d("abc --> ", "Home: {$mealId}")
                                         navController.navigate(Routes.Details(mealId))
+                                    },
+                                    onNavigateToLogin = {
+                                        Firebase.auth.signOut()
+
+                                        navController.navigate(AuthGraph) {
+                                            popUpTo<MainGraph> { inclusive = true }
+                                        }
                                     }
                                 )
 
@@ -330,6 +380,7 @@ class MainActivity : ComponentActivity() {
                                         navController.navigate(Routes.Favorites)
                                     },
                                     accountService = AccountServiceImpl(),
+                                    themeViewModel = themeViewModel,
                                     onLogOutComplete = {
                                         navController.navigate(AuthGraph)
                                     }
@@ -388,6 +439,9 @@ class MainActivity : ComponentActivity() {
 
                                 FavoriteScreen(
                                     favViewModel,
+                                    onMealClick = { mealId ->
+                                        navController.navigate(Routes.Details(mealId))
+                                    },
                                     modifier = screenModifier
                                 )
                             }

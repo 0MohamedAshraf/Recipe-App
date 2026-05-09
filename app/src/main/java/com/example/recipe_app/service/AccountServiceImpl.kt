@@ -33,14 +33,14 @@ class AccountServiceImpl : AccountService {
             if (user == null) {
                 UserProfile("Guest", "", null)
             } else {
-                val name = user.displayName ?: "User"
+                val name = if(!user.displayName.isNullOrEmpty()) user.displayName else "User"
                 val date = user.metadata?.creationTimestamp?.let {
                     val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
                     "Joined ${sdf.format(Date(it))}"
                 } ?: "Joined recently"
 
                 UserProfile(
-                    name = name,
+                    name = name ?: "User",
                     joinDate = date,
                     photoUrl = user.photoUrl?.toString()
                 )

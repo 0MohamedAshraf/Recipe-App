@@ -11,10 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,14 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.example.recipe_app.R
-import com.example.recipe_app.ui.theme.OrangeVariant
 
 @Composable
 fun MealOfTheDayCard(
@@ -37,15 +34,19 @@ fun MealOfTheDayCard(
     image: String?,
     tags: String?,
     onViewRecipeClick: () -> Unit,
-    modifier: Modifier = Modifier){
+    modifier: Modifier = Modifier
+) {
     Card(
         onClick = onViewRecipeClick,
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 16.dp, pressedElevation = 2.dp),
+            defaultElevation = 8.dp, pressedElevation = 2.dp
+        ),
         modifier = modifier
             .fillMaxWidth()
-            .height(216.dp)) {
-        Box(modifier = Modifier.fillMaxSize()){
+            .height(216.dp),
+        shape = RoundedCornerShape(24.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
                 model = image,
                 contentDescription = null,
@@ -59,60 +60,51 @@ fun MealOfTheDayCard(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                Color.Black.copy(alpha = 0.8f)
+                                Color.Black.copy(alpha = 0.7f)
                             ),
-                            startY = 150f
+                            startY = 300f
                         )
                     )
             )
-            Column(
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(16.dp).width(200.dp)
+            
+            // "Chief's Choice" Badge
+            Box(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Text(
-                    text = "Chief's Choice",
-                    Modifier
-                        .background(color = OrangeVariant, shape = RoundedCornerShape(16.dp))
-                        .padding(4.dp),
+                    text = stringResource(R.string.chief_s_choice),
                     color = Color.White,
-                    fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
-
-
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
+
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(16.dp)
-                    .fillMaxWidth(0.6f)
+                    .fillMaxWidth()
             ) {
                 Text(
                     text = title,
                     color = Color.White,
-                    fontSize = 24.sp
-
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                if (tags != null) {
+                if (!tags.isNullOrEmpty()) {
                     Text(
                         text = tags,
-                        color = Color.LightGray
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
-
-
         }
     }
-}
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun MealOfTheDayCardPreview(){
-//    MealOfTheDayCard(
-//        title = "Lemon Herb Roasted Chicken",
-//        image = R.drawable.temp,
-//        tags = "Chicken,Lunch",
-//        onViewRecipeClick = {}
-//    )
 }

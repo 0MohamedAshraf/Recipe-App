@@ -1,27 +1,26 @@
 package com.example.recipe_app.screens.detailsScreen.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.recipe_app.ui.theme.OrangeVariant
+import androidx.compose.ui.res.stringResource
+import com.example.recipe_app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsTopBar(
     onBackClick: () -> Unit,
     onFavoriteClick: () -> Unit,
-    onShareClick: () -> Unit,
     isFavorite: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -29,7 +28,8 @@ fun DetailsTopBar(
         modifier = modifier,
         title = {
             Text(
-                text = "Recipe Details"
+                text = stringResource(R.string.recipe_details),
+                style = MaterialTheme.typography.titleLarge
             )
         },
         actions = {
@@ -37,33 +37,24 @@ fun DetailsTopBar(
                 Icon(
                     imageVector = if(isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = "Favorite",
-                    tint = OrangeVariant
-                )
-            }
-            IconButton(onClick = onShareClick) {
-                Icon(
-                    imageVector = Icons.Outlined.Share,
-                    contentDescription = "Share",
-                    tint = OrangeVariant
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 )
             }
         },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    imageVector = Icons.Filled.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back Button",
-                    tint = OrangeVariant
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
-        }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+        )
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DetailsTopBarPreview(){
-
-//    DetailsTopBar({},{},{})
-
 }

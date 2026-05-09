@@ -1,11 +1,8 @@
 package com.example.recipe_app.screens.homeScreen
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,37 +10,31 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.recipe_app.R
+import com.example.recipe_app.components.LoginRequiredDialog
+import com.example.recipe_app.components.SectionHeader
+import com.example.recipe_app.database.entity.Favorite
+import com.example.recipe_app.screens.favScreen.RemoveDialog
 import com.example.recipe_app.screens.homeScreen.components.CategoriesRow
 import com.example.recipe_app.screens.homeScreen.components.MealLazyColumn
 import com.example.recipe_app.screens.homeScreen.components.MealOfTheDayCard
-import com.example.recipe_app.components.SectionHeader
-import com.example.recipe_app.database.dao.FavoriteDao
-import com.example.recipe_app.database.entity.Favorite
-import com.example.recipe_app.navBarItems
 import com.example.recipe_app.screens.homeScreen.dto.Category
 import com.example.recipe_app.screens.homeScreen.dto.Meal
 import com.example.recipe_app.screens.homeScreen.viewmodel.MealViewModel
+import com.example.recipe_app.screens.noConnectionScreen.OfflineScreen
 import com.example.recipe_app.ui.theme.OrangeVariant
-import com.example.recipe_app.ui.theme.Recipe_AppTheme
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -51,44 +42,92 @@ import com.google.firebase.auth.auth
 fun HomeScreen(
     mealViewModel: MealViewModel,
     onMealClick : (String) -> Unit,
+    onNavigateToLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isOffline by mealViewModel.isOffline.collectAsStateWithLifecycle()
     val randomMeal by mealViewModel.randomMeal.collectAsStateWithLifecycle()
     val categories by mealViewModel.categories.collectAsStateWithLifecycle()
     val meals by mealViewModel.categoryOfMeals.collectAsStateWithLifecycle()
     val favoriteIds by mealViewModel.favIds.collectAsStateWithLifecycle()
     val selectedCategoryIndex by mealViewModel.selectedCategoryIndex.collectAsStateWithLifecycle()
+    var mealToRemove by remember { mutableStateOf<Meal?>(null) }
 
-    HomeScreenContent(
-        randomMeal = randomMeal,
-        categories = categories,
-        meals = meals,
-        favoriteIds = favoriteIds,
-        onMealClick = onMealClick,
-        selectedCategoryIndex = selectedCategoryIndex,
-        onCategorySelect = { newIndex, categoryName ->
-            mealViewModel.setSelectedCategoryIndex(newIndex)
-            mealViewModel.getMealByCategory(categoryName)
-        },
-        modifier = modifier,
-        onFavClick = { meal ->
-            val fav = Favorite(
-                userId = Firebase.auth.currentUser?.uid.orEmpty(),
-                id = meal.idMeal,
-                name = meal.strMeal,
-                image = meal.strMealThumb.orEmpty(),
-                category = meal.strCategory.orEmpty(),
-                area = meal.strArea.orEmpty()
-            )
-            if(favoriteIds.contains(meal.idMeal)){
-                mealViewModel.removeFromFav(meal.idMeal)
+    var showLoginDialog by remember { mutableStateOf(false) }
+    val isGuest = Firebase.auth.currentUser?.isAnonymous == true
+
+    if (showLoginDialog) {
+        LoginRequiredDialog(
+            onDismiss = { showLoginDialog = false },
+            onLoginConfirm = {
+                showLoginDialog = false
+                onNavigateToLogin()
             }
-            else
-                mealViewModel.addToFavorite(fav)
+        )
+    }
+    if (mealToRemove != null) {
+        RemoveDialog(
+            onDismiss = {
+                mealToRemove = null
+            },
+            onConfirm = {
+                mealToRemove?.let { meal ->
+                    mealViewModel.removeFromFav(meal.idMeal)
+                }
+                mealToRemove = null
+            }
+        )
+    }
+
+    if(isOffline){
+        OfflineScreen(
+            modifier = modifier,
+            onTryAgain = {
+                with(mealViewModel){
+                    getRandomMeal()
+                    getAllCategories()
+                    getMealByCategory("Beef")
+                }
+            }
+        )
+    }else{
+        HomeScreenContent(
+            randomMeal = randomMeal,
+            categories = categories,
+            meals = meals,
+            favoriteIds = favoriteIds,
+            onMealClick = onMealClick,
+            selectedCategoryIndex = selectedCategoryIndex,
+            onCategorySelect = { newIndex, categoryName ->
+                mealViewModel.setSelectedCategoryIndex(newIndex)
+                mealViewModel.getMealByCategory(categoryName)
+            },
+            modifier = modifier,
+            onFavClick = { meal ->
+                if (isGuest) {
+                    showLoginDialog = true
+                } else {
+                    if(favoriteIds.contains(meal.idMeal)){
+                        mealToRemove = meal
+                    }
+                    else{
+                        val fav = Favorite(
+                            userId = Firebase.auth.currentUser?.uid.orEmpty(),
+                            id = meal.idMeal,
+                            name = meal.strMeal,
+                            image = meal.strMealThumb.orEmpty(),
+                            category = meal.strCategory.orEmpty(),
+                            area = meal.strArea.orEmpty()
+                        )
+                        mealViewModel.addToFavorite(fav)
+                    }
+                }
 
 
-        }
-    )
+            }
+        )
+
+    }
 }
 
 
@@ -125,7 +164,7 @@ fun HomeScreenContent(
             )
 
             SectionHeader(
-                title = "Meal of the Day",
+                title = stringResource(R.string.meal_of_the_day),
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
@@ -141,7 +180,7 @@ fun HomeScreenContent(
 
         Spacer(Modifier.height(16.dp))
 
-        SectionHeader(title = "Category")
+        SectionHeader(title = stringResource(R.string.category))
 
         Spacer(Modifier.height(16.dp))
 
@@ -155,7 +194,7 @@ fun HomeScreenContent(
 
         Spacer(Modifier.height(16.dp))
 
-        SectionHeader(title = "Trending Meals")
+        SectionHeader(title = stringResource(R.string.trending_meals))
         Spacer(Modifier.height(16.dp))
 
         MealLazyColumn(

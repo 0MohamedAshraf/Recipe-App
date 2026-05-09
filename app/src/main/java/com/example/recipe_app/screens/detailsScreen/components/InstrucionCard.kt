@@ -15,6 +15,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,13 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.recipe_app.R
-import com.example.recipe_app.ui.theme.OrangeVariant
 
 @Composable
 fun InstructionCard(
@@ -47,8 +47,10 @@ fun InstructionCard(
     )
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -67,14 +69,14 @@ fun InstructionCard(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .size(36.dp)
-                        .background(OrangeVariant, shape = CircleShape)
+                        .background(MaterialTheme.colorScheme.primary, shape = CircleShape)
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.fork_knife),
                         contentDescription = "Instructions Icon",
+                        tint = Color.White,
                         modifier = Modifier
                             .size(18.dp)
-                            .align(Alignment.Center)
                     )
                 }
             }
@@ -86,10 +88,10 @@ fun InstructionCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Instructions",
+                        text = stringResource(R.string.instructions),
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        color = Color(0xFF0F172A),
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
                     IconButton(
@@ -99,31 +101,22 @@ fun InstructionCard(
                             imageVector = Icons.Default.KeyboardArrowDown,
                             contentDescription = "Expansion Arrow",
                             modifier = Modifier.rotate(rotationState),
-                            tint = Color.Gray
+                            tint = MaterialTheme.colorScheme.secondary
                         )
                     }
                 }
 
                 Text(
                     text = instructions,
-                    color = Color.DarkGray,
-                    modifier = Modifier.padding(top = 8.dp),
-                    lineHeight = 24.sp,
-                    maxLines = if(isExpanded) Int.MAX_VALUE else 2,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                    lineHeight = 22.sp,
+                    maxLines = if(isExpanded) Int.MAX_VALUE else 3,
                     overflow = TextOverflow.Ellipsis
                 )
 
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun InstructionCardPreview(){
-
-    InstructionCard(
-        "Gather the ingredients In a large soup pot, bring water, split peas, pork belly or bacon, pork chop, and bouillon cube to a boil. Reduce the heat to a simmer, cover and let cook for 45 minutes, stirring occasionally and skimming off any foam that rises to the top. "
-    )
-
 }

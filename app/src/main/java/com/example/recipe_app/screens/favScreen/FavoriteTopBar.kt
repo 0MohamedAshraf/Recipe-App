@@ -8,8 +8,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.recipe_app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,7 +22,7 @@ fun FavoriteTopBar(
         title = {
 
             Text(
-                text = "My Favorites",
+                text = stringResource(R.string.my_favorites),
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
