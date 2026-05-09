@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
@@ -28,6 +29,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.example.recipe_app.R
 
 data class Country(val name: String, val code: String, val flag: String)
 
@@ -103,7 +105,7 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = "Sign Up",
+            text = stringResource(R.string.sign_up),
             fontSize = 40.sp,
             fontWeight = FontWeight.Bold
         )
@@ -113,7 +115,7 @@ fun SignUpScreen(
         Row(modifier = Modifier.fillMaxWidth()) {
 
             Column(modifier = Modifier.weight(1f)) {
-                Text("First Name")
+                Text(stringResource(R.string.first_name))
                 Spacer(modifier = Modifier.height(5.dp))
                 OutlinedTextField(
                     value = firstName,
@@ -131,7 +133,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.width(10.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text("Last Name")
+                Text(stringResource(R.string.last_name))
                 Spacer(modifier = Modifier.height(5.dp))
                 OutlinedTextField(
                     value = lastName,
@@ -150,7 +152,7 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text("Email")
+            Text(stringResource(R.string.email))
             Spacer(modifier = Modifier.height(5.dp))
             OutlinedTextField(
                 value = email,
@@ -164,7 +166,7 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text("Birthday")
+            Text(stringResource(R.string.birthday))
             Spacer(modifier = Modifier.height(5.dp))
 
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -301,7 +303,7 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text("Password")
+            Text(stringResource(R.string.password))
             Spacer(modifier = Modifier.height(5.dp))
             OutlinedTextField(
                 value = password,
@@ -426,22 +428,22 @@ fun SignUpScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = if (isLoading) "Loading..." else "Register",
+                text = if (isLoading) stringResource(R.string.loading)else stringResource(R.string.register),
                 color = Color.White
             )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Text(text = "Or login with", color = Color.Gray)
+        Text(text = stringResource(R.string.or_login_with), color = Color.Gray)
 
         Spacer(modifier = Modifier.height(15.dp))
 
         Row {
-            Text("Already have an account? ")
+            Text(stringResource(R.string.already_have_an_account))
 
             Text(
-                text = "Log In",
+                text = stringResource(R.string.log_in),
                 color = Color.Blue,
                 fontWeight = FontWeight.Bold,
                 textDecoration = TextDecoration.Underline,

@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,21 +19,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.example.recipe_app.R
-import com.example.recipe_app.ui.theme.OrangeVariant
 
 @Composable
-fun MealImage(image: String,mealName: String, area: String, category: String, modifier: Modifier = Modifier){
-
-    Box(modifier.fillMaxWidth().height(350.dp)){
+fun MealImage(image: String, mealName: String, area: String, category: String, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth().height(350.dp)) {
         AsyncImage(
             model = image,
             contentDescription = null,
-            contentScale = ContentScale.FillBounds,
+            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
         Box(
@@ -43,62 +39,48 @@ fun MealImage(image: String,mealName: String, area: String, category: String, mo
                     Brush.verticalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            Color.Black.copy(alpha = 0.8f)
+                            Color.Black.copy(alpha = 0.7f)
                         ),
-                        startY = 150f
+                        startY = 400f
                     )
                 )
         )
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .height(140.dp)
                 .align(Alignment.BottomStart),
-            verticalArrangement = Arrangement.SpaceEvenly
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = category.uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     modifier = Modifier
-                        .background(color = OrangeVariant, shape = RoundedCornerShape(16.dp))
-                        .padding(8.dp)
+                        .background(color = MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 )
                 Text(
                     text = area.uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     modifier = Modifier
-                        .padding(start = 4.dp)
-                        .background(color = Color.White.copy(0.2f), shape = RoundedCornerShape(16.dp),)
-                        .padding(8.dp)
-
+                        .background(color = Color.White.copy(0.2f), shape = RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
             Text(
-                text = mealName.uppercase(),
-                fontSize = 32.sp,
+                text = mealName,
+                style = MaterialTheme.typography.headlineLarge,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 lineHeight = 38.sp
             )
         }
-    }
-}
-
-
-@Preview(showBackground = true, showSystemUi = false)
-@Composable
-fun MealImagePreview(){
-
-    Scaffold() {
-        MealImage(
-            R.drawable.temp.toString(),
-            "Bang bang prawn salad",
-            "Vietnamese","Seafood",
-            modifier = Modifier.padding(it))
     }
 }

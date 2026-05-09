@@ -25,6 +25,9 @@ class MealViewModel(
         getAllCategories()
         getMealByCategory("Beef")
     }
+
+    private val _isOffline = MutableStateFlow(false)
+    val isOffline = _isOffline.asStateFlow()
     private val _randomMeal = MutableStateFlow<Meal?>(null)
     val randomMeal = _randomMeal.asStateFlow()
 
@@ -45,30 +48,40 @@ class MealViewModel(
     }
     fun getAllCategories(){
         viewModelScope.launch {
-            val response = mealRepository.getAllCategories()
-            if (response.isSuccessful){
-                val categoriesList = response.body()?.categories
-                if (categoriesList != null) {
-                    _categories.value = categoriesList
-                    Log.d("asd --> ", "getCategories: ${categoriesList.joinToString(",")}")
+            try {
+                val response = mealRepository.getAllCategories()
+                if (response.isSuccessful){
+                    val categoriesList = response.body()?.categories
+                    if (categoriesList != null) {
+                        _categories.value = categoriesList
+                        Log.d("asd --> ", "getCategories: ${categoriesList.joinToString(",")}")
 
-                }else{
-                    Log.d("asd --> ", "getCategories: error")
+                    }else{
+                        Log.d("asd --> ", "getCategories: error")
 
+                    }
+                    _isOffline.value = false
                 }
+            }catch (e: Exception){
+                _isOffline.value = true
             }
         }
     }
     fun getRandomMeal(){
         viewModelScope.launch {
+            try{
             val response = mealRepository.getRandomMeal()
             if(response.isSuccessful){
                 val meal = response.body()?.meals?.get(0)
                 _randomMeal.value = meal
                 Log.d("asd --> ", "getMeal: $meal")
+                _isOffline.value = false
             }
             else
                 Log.d("asd -->", "getMeal: error ")
+            }catch (e: Exception){
+                _isOffline.value = true
+            }
         }
     }
 
@@ -97,14 +110,20 @@ class MealViewModel(
     }
     fun getMealByCategory(category: String){
         viewModelScope.launch {
-            val response = mealRepository.filterByCategory(category)
-            if(response.isSuccessful){
-                val ListOfMeals = response.body()?.meals
-                if (ListOfMeals != null)
-                _categoryOfMeals.value = ListOfMeals
-                else Log.d("asd -->", "getMealByCategory: Empty List of Meals ")
-            }else{
-                Log.d("asd -->", "getMealByCategory: Error")
+            try{
+                val response = mealRepository.filterByCategory(category)
+                if(response.isSuccessful){
+                    val ListOfMeals = response.body()?.meals
+                    if (ListOfMeals != null)
+                    _categoryOfMeals.value = ListOfMeals
+                    else Log.d("asd -->", "getMealByCategory: Empty List of Meals ")
+                    _isOffline.value = false
+
+                }else{
+                    Log.d("asd -->", "getMealByCategory: Error")
+                }
+            }catch (e: Exception){
+                _isOffline.value = true
             }
         }
     }

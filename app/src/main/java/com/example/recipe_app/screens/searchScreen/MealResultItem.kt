@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,13 +20,17 @@ import coil3.compose.AsyncImage
 import com.example.recipe_app.screens.homeScreen.dto.Meal
 
 @Composable
-fun MealResultItem(meal: Meal,onClick: () -> Unit) {
+fun MealResultItem(meal: Meal, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFFFF3E6))
-            .border(1.dp, Color(0xFFFFE0CC), RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .border(
+                1.dp, 
+                MaterialTheme.colorScheme.outlineVariant, 
+                RoundedCornerShape(12.dp)
+            )
             .clickable { onClick() }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -43,7 +48,7 @@ fun MealResultItem(meal: Meal,onClick: () -> Unit) {
             text = meal.strMeal,
             fontWeight = FontWeight.Bold,
             fontSize = 15.sp,
-            color = Color.DarkGray
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

@@ -32,7 +32,7 @@ fun CustomLoadingIndicator(modifier: Modifier = Modifier) {
         LottieAnimation(
             composition = composition,
             progress = { progress },
-//            modifier = Modifier.size(150.dp) // Adjust size as needed!
+//            modifier = Modifier.size(150.dp)
         )
     }
 }
