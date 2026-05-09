@@ -167,7 +167,6 @@ fun ProfileScreen(
             isChecked = isDarkMode,
             onCheckedChange = { themeViewModel.toggleTheme(it) }
         )
-        Spacer(modifier = Modifier.height(12.dp))
 
         ProfileMenuRow(
             icon = Icons.Outlined.Language,
